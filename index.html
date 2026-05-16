@@ -116,7 +116,17 @@
     font-weight: bold !important;
     color: black !important;
 }
-
+/* ใส่ต่อท้ายใต้บรรทัดที่ 118 ได้เลยครับ */
+#receipt-area::after {
+    content: "ณ COCO\A INTEGRATED FARM SYSTEM" !important;
+    display: block !important;
+    white-space: pre-line !important; /* บังคับให้ขึ้นบรรทัดใหม่ตามรหัส \A */
+    text-align: center !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    color: black !important;
+    margin-bottom: 4mm !important;
+}
     /* ดีไซน์อื่นๆ ของคุณ (คงเดิม) */
     #receipt-area #receipt-q { 
         font-size: 32px !important; 
