@@ -395,36 +395,8 @@
 }
 
 function printReceipt() {
-    // 1. ดึงกล่องใบเสร็จสีขาวฝั่งขวามาเตรียมแปลงเป็นรูป
-    const receiptElement = document.getElementById('receipt-area'); 
-    
-    // 2. สั่งแปลงโฉมเป็นรูปภาพความละเอียดชัดเจนสำหรับเครื่องปริ้นท์ความร้อน
-    html2canvas(receiptElement, {
-        scale: 2, // เพิ่มความชัดของตัวอักษรและโลโก้
-        useCORS: true,
-        logging: false
-    }).then(canvas => {
-        // 3. สร้างแท็กรูปภาพมารองรับข้อมูล
-        let imgData = canvas.toDataURL('image/png');
-        
-        // เช็คว่ามีกล่องรูปภาพเดิมอยู่ไหม ถ้าไม่มีให้สร้างใหม่
-        let printContainer = document.getElementById('printed-receipt-image');
-        if (!printContainer) {
-            printContainer = document.createElement('img');
-            printContainer.id = 'printed-receipt-image';
-            document.body.appendChild(printContainer);
-        }
-        
-        // เอารูปใบเสร็จใส่เข้าไปแล้วสั่งพิมพ์ทันที!
-        printContainer.src = imgData;
-        printContainer.style.display = 'block';
-        
-        // เรียกคำสั่งพิมพ์ของ iPad
-        setTimeout(() => {
-            window.print();
-            printContainer.style.display = 'none'; // พิมพ์เสร็จแล้วซ่อนรูปคืน
-        }, 300);
-    });
+    // สั่งพิมพ์ตรง ๆ ผ่านระบบของ iPad ทันที ไม่ต้องแคปจอให้ติดบล็อกความปลอดภัย
+    window.print();
 }
 
 // --- ฟังก์ชันปิดยอดรายวัน (อัปเดตใหม่: สรุปยอดส่งเข้า Sheets) ---
