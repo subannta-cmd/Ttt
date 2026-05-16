@@ -3,20 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ณ COCO POS 🌴</title>
-	 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <title>Na COCO POS 🌴</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+
+	 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+	
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f4f7f4; overflow: hidden; }
+        
         .menu-card { transition: all 0.2s; background: white; cursor: pointer; border-radius: 25px; border: 1px solid #f0f0f0; overflow: hidden; height: 100%; }
+        
         .menu-card:active { transform: scale(0.95); background-color: #f0fdf4; }
+        
         .menu-img-display { width: 100%; height: 110px; object-fit: cover; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+        
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        
         .category-header { grid-column: 1 / -1; margin-top: 1.5rem; border-left: 4px solid #166534; padding-left: 0.75rem; margin-bottom: 0.5rem; }
+        
         .sweet-btn { border: 2px solid #e5e7eb; padding: 10px; border-radius: 15px; font-size: 14px; cursor: pointer; text-align: center; font-weight: bold; }
+        
         .sweet-btn.active { border-color: #f97316; background-color: #fff7ed; color: #f97316; }
+
+        /* แก้ไขตรงนี้: เพิ่มดอกจัน (*) เพื่อให้ครอบคลุมทั้งหน้าจอ */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .category-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #166534;
+        }
         
       @media print {
     @page { 
@@ -119,6 +142,8 @@
         .btn-confirm-order { animation: pulse-green 2s infinite; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
     </style>
+</head>
+
 </head>
 <body class="text-gray-800">
 
@@ -580,34 +605,54 @@ async function sendDailyClose() {
             location.reload();
         }
 
-        init();
+init();
+
+// 1. ประกาศตัวแปรไว้ด้านนอกสุด (เหลืออันเดียว)
 let btCharacteristic = null;
 
+// 2. ฟังก์ชันเชื่อมต่อบลูทูธ
 async function connectBluetooth() {
     try {
         const device = await navigator.bluetooth.requestDevice({
             filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
             optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
         });
+        
         const server = await device.gatt.connect();
         const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-        const chars = await service.getCharacteristics();
-        btCharacteristic = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+        
+        const characteristics = await service.getCharacteristics();
+        btCharacteristic = characteristics.find(c => 
+            c.properties.write || c.properties.writeWithoutResponse
+        );
+
         if (btCharacteristic) {
             document.getElementById('bt-status').classList.replace('text-gray-400', 'text-blue-500');
-            alert('เชื่อมต่อเครื่องพิมพ์แล้ว 🌴');
+            alert('เชื่อมต่อเครื่องพิมพ์ ณ Coco สำเร็จแล้วครับ! 🌴');
         }
-    } catch (e) { alert('เชื่อมต่อไม่ได้: ' + e); }
+    } catch (e) {
+        console.error("Bluetooth Error:", e);
+        alert('เชื่อมต่อไม่ได้: ' + e.message);
+    }
 }
 
-async function printViaBluetooth(text) {
+// 3. ฟังก์ชันสำหรับส่งข้อมูล
+async function sendToPrinter(data) {
     if (!btCharacteristic) return;
-    const encoder = new TextEncoder(); // หมายเหตุ: ภาษาไทยอาจต้องใช้ Lib เพิ่มเติม
-    const data = encoder.encode(text + '\n\n\n\n\n'); 
     for (let i = 0; i < data.length; i += 20) {
         await btCharacteristic.writeValue(data.slice(i, i + 20));
     }
 }
-    </script>
+
+// 4. ฟังก์ชันพิมพ์แบบข้อความ
+async function printViaBluetooth(text) {
+    if (!btCharacteristic) return;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text + '\n\n\n\n\n'); 
+    await sendToPrinter(data);
+}
+
+// ลบปีกกาที่เกินออกแล้ว
+</script>
 </body>
 </html>
