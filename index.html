@@ -41,14 +41,14 @@
             color: #166534;
         }
         
-      @media print {
-    /* 1. ตั้งค่าหน้ากระดาษให้ยอมรับความยาวแบบต่อเนื่อง (สำหรับเครื่อง 58mm) */
+     @media print {
+    /* 1. บังคับขนาดหน้ากระดาษม้วน 58mm แบบไม่จำกัดความสูง */
     @page { 
-        size: 58mm; /* เอา auto ออก เพื่อให้เครื่องพิมพ์ไหลยาวตามเนื้อหาจริง */
-        margin: 0; 
+        size: 58mm auto; /* ถ้าเครื่องพิมพ์บางรุ่นบั๊ก ให้ใช้แค่ size: 58mm; */
+        margin: 0 !important; 
     }
 
-    /* 2. ล้างสีทุกอย่างให้เป็นขาวดำสนิท และซ่อนเนื้อหาทั้งหมดก่อน */
+    /* 2. ซ่อนส่วนประกอบเว็บทั้งหมดตามสูตรเดิม */
     * {
         color: #000000 !important;
         background-color: #ffffff !important;
@@ -60,80 +60,85 @@
         visibility: hidden;
     }
 
-    /* 3. บังคับให้เฉพาะใบเสร็จและลูกหลานมองเห็น */
+    /* 3. เปิดให้เห็นเฉพาะใบเสร็จและลูกหลานทั้งหมด */
     #receipt-area, #receipt-area * {
-        visibility: visible;
+        visibility: visible !important;
     }
 
-    /* 4. ปรับโครงสร้างหลัก ไม่ใช้ position: absolute เพื่อให้เครื่องพิมพ์คำนวณความยาวได้ */
+    /* 4. ปรับแก้โครงสร้างหลัก: เคลียร์ระบบระเบียบความสูงให้ไหลตามธรรมชาติ */
     html, body {
         background: white !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 58mm !important; /* ล็อกความกว้างหน้าเว็บให้เท่ากระดาษ */
-        height: auto !important;
+        width: 58mm !important;
+        height: auto !important;     /* บังคับให้ความสูงยืดตามเนื้อหา */
+        overflow: visible !important; /* ป้องกันไม่ให้เนื้อหาถูกบีบตัด */
+        display: block !important;
         filter: grayscale(100%) !important;
     }
 
-    /* 5. จัดตำแหน่งใบเสร็จให้อยู่ในเซฟโซน ไม่หลุดขอบ */
+    /* 5. แก้ไขตัวกล่องใบเสร็จหลัก (ห้ามใช้ absolute เด็ดขาด) */
     #receipt-area { 
         display: block !important;
-        width: 100% !important; 
-        max-width: 48mm !important; /* ปรับเพิ่มจาก 44mm เป็น 48mm ให้ใช้พื้นที่กระดาษได้เต็มขึ้นนิดนึงครับ */
-        margin: 0 auto !important; /* จัดให้อยู่ตรงกลางกระดาษพอดี */
-        padding: 4mm 2mm 15mm 2mm !important; /* เพิ่มระยะเว้นท้ายเป็น 15mm เพื่อให้พ้นใบมีดตัดแน่นอน ข้อความไม่ขาด */
+        position: relative !important; /* เปลี่ยนจาก absolute เป็น relative */
+        float: none !important;
+        width: 58mm !important; 
+        max-width: 58mm !important;
+        margin: 0 !important; 
+        padding: 5mm 4mm 20mm 4mm !important; /* ขยายระยะเว้นก้นกระดาษเผื่อใบมีดสับ */
         box-sizing: border-box !important;
     }
 
-    /* --- ดีไซน์เดิมของคุณ (คงไว้ทั้งหมด) --- */
-    /* ปรับโลโก้ให้ดำชัดขึ้น */
+    /* 6. ปรับขนาดโลโก้ให้พอดีกระดาษ ไม่โดนขอบดัน */
     #receipt-area img { 
-        width: 30mm !important; 
+        width: 25mm !important; /* ปรับลดขนาดลงนิดนึงเพื่อความปลอดภัย */
         height: auto !important;
         filter: grayscale(100%) contrast(2) !important; 
-        margin-bottom: 2mm;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
+        margin-bottom: 3mm;
+        display: block !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
 
-    /* เลขคิว */
+    /* ดีไซน์อื่นๆ ของคุณ (คงเดิม) */
     #receipt-area #receipt-q { 
-        font-size: 36px !important; 
+        font-size: 32px !important; 
         font-weight: 900 !important;
-        border: 3px solid black !important;
-        display: inline-block;
-        padding: 2mm 5mm;
-        margin: 2mm 0;
+        border: 2px solid black !important;
+        display: inline-block !important;
+        padding: 1mm 4mm !important;
+        margin: 2mm 0 !important;
         color: black !important;
     }
 
-    /* เส้นประรายการ */
     #cart-list > div { 
         border-bottom: 1.5px dashed black !important; 
         padding-bottom: 4px !important; 
         margin-bottom: 4px !important; 
+        display: flex !important; /* ป้องกันกล่องรายการสินค้าซ้อนหรือลอย */
+        justify-content: space-between !important;
     }
 
     #total-price {
-        font-size: 24px !important;
+        font-size: 22px !important;
         font-weight: bold !important;
         color: black !important;
+        display: block !important;
     }
 
-    /* ส่วนท้ายใบเสร็จ */
+    /* ข้อความขอบคุณท้ายใบเสร็จ */
     #receipt-area::after {
-        content: "--- ขอบคุณที่ใช้บริการ ---";
-        display: block;
-        text-align: center;
-        font-size: 10px;
-        margin-top: 5mm;
-        padding-bottom: 5mm;
-        border-top: 1px solid black;
+        content: "--- ขอบคุณที่ใช้บริการ ---" !important;
+        display: block !important;
+        text-align: center !important;
+        font-size: 10px !important;
+        margin-top: 5mm !important;
+        padding-bottom: 5mm !important;
+        border-top: 1px solid black !important;
         color: black !important;
     }
 
-    /* บังคับซ่อนส่วนอื่นแบบเด็ดขาด */
+    /* บังคับซ่อนส่วนที่เหลือในหน้าเว็บ */
     .print-hidden, .modal, #admin-panel, #confirm-section, #qr-area, .flex.h-screen {
         display: none !important;
     }
