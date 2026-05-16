@@ -32,7 +32,7 @@
     .btn-confirm-order { animation: pulse-green 2s infinite; }
     @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
 
-  /* สูตรดั้งเดิมของ iPad + เพิ่มความยาวก้นบิลกันกระดาษหด */
+    /* สูตรดั้งเดิมของ iPad + เพิ่มความยาวก้นบิลกันกระดาษหด */
     @media print {
         body * {
             visibility: hidden;
@@ -105,9 +105,6 @@
 
     <div id="admin-modal" class="modal">
         <div class="bg-white rounded-[30px] w-full max-w-md p-6 shadow-2xl m-4 flex flex-col max-h-[90vh]">
-<!-- ค้นหากลุ่มปุ่มนี้ แล้ววางบรรทัดแรกเพิ่มเข้าไป -->
-<button id="bt-status" onclick="connectBluetooth()" class="p-3 bg-white border rounded-full text-gray-400 shadow-sm"><i class="fab fa-bluetooth-b"></i></button>
-
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-green-800"><i class="fas fa-cog"></i> ตั้งค่าระบบ</h2>
                 <button onclick="closeAdmin()" class="text-2xl text-gray-400">&times;</button>
@@ -313,108 +310,109 @@
         }
 
         async function handleCheckout() {
-    if (cart.length === 0 || !isOrderConfirmed) return;
+            if (cart.length === 0 || !isOrderConfirmed) return;
 
-    const timeStr = new Date().toLocaleString('th-TH');
-    const finalTotal = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, ''));
-    const vatAmount = parseFloat(document.getElementById('txt-vat-amount').innerText.replace(/,/g, ''));
-    const note = document.getElementById('receipt-note').value;
+            const timeStr = new Date().toLocaleString('th-TH');
+            const finalTotal = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, ''));
+            const vatAmount = parseFloat(document.getElementById('txt-vat-amount').innerText.replace(/,/g, ''));
+            const note = document.getElementById('receipt-note').value;
 
-    // อัปเดตวันที่บนหน้าบิลฝั่งขวาให้เป็นเวลาปัจจุบันก่อนพิมพ์
-    document.getElementById('cur-date').innerText = timeStr;
+            // อัปเดตวันที่บนหน้าบิลฝั่งขวาให้เป็นเวลาปัจจุบันก่อนพิมพ์
+            document.getElementById('cur-date').innerText = timeStr;
 
-    // 🚨 ไม้ตาย: สั่งให้ iPad เปิดหน้าต่างสั่งพิมพ์ใบเสร็จทันที! (เด้งชัวร์ 100%)
-    window.print();
+            // 🚨 ไม้ตาย: สั่งให้ iPad เปิดหน้าต่างสั่งพิมพ์ใบเสร็จทันที! (เด้งชัวร์ 100%)
+            window.print();
 
-    // --- บันทึกข้อมูลระบบหลังบ้าน (Sheets & History) ---
-    dailyHistory.push({ 
-        type: 'SALE', 
-        time: new Date().toLocaleTimeString('th-TH'), 
-        amount: finalTotal, 
-        q: q 
-    });
-    localStorage.setItem('na_coco_daily_log', JSON.stringify(dailyHistory));
+            // --- บันทึกข้อมูลระบบหลังบ้าน (History) ---
+            dailyHistory.push({ 
+                type: 'SALE', 
+                time: new Date().toLocaleTimeString('th-TH'), 
+                amount: finalTotal, 
+                q: q 
+            });
+            localStorage.setItem('na_coco_daily_log', JSON.stringify(dailyHistory));
 
-    // มัดรวมรายการส่งเข้า Google Sheets ของร้าน ณ Coco
-    const summaryMap = {};
-    cart.forEach(item => { summaryMap[item.name] = (summaryMap[item.name] || 0) + item.qty; });
-    const itemsText = Object.entries(summaryMap).map(([n, q]) => `${n}(${q})`).join(', ');
+            // มัดรวมรายการส่งเข้า Google Sheets ของร้าน ณ Coco
+            const summaryMap = {};
+            cart.forEach(item => { summaryMap[item.name] = (summaryMap[item.name] || 0) + item.qty; });
+            const itemsText = Object.entries(summaryMap).map(([n, q]) => `${n}(${q})`).join(', ');
 
-    try {
-        fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({
-                timestamp: timeStr,
-                items: itemsText,
-                amount: finalTotal,
-                vat_amount: vatAmount,
-                note: note
-            })
-        });
-    } catch (e) {
-        console.error("Sheet Error:", e);
-    }
+            try {
+                fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        timestamp: timeStr,
+                        items: itemsText,
+                        amount: finalTotal,
+                        vat_amount: vatAmount,
+                        note: note
+                    })
+                });
+            } catch (e) {
+                console.error("Sheet Error:", e);
+            }
 
-    // หน่วงเวลาแป๊บนึงให้พิมพ์เสร็จ แล้วค่อยล้างตะกร้า+รันคิวถัดไป
-    setTimeout(() => {
-        q++;
-        localStorage.setItem('na_coco_q', q);
-        clearCart();
-        renderApp();
-    }, 1500);
-}
-function printReceipt() {
-    // สั่งพิมพ์ตรง ๆ ผ่านระบบของ iPad ทันที ไม่ต้องแคปจอให้ติดบล็อกความปลอดภัย
-    window.print();
-}
-
-// --- ฟังก์ชันปิดยอดรายวัน (อัปเดตใหม่: สรุปยอดส่งเข้า Sheets) ---
-async function sendDailyClose() {
-    if (!confirm('ยืนยันปิดยอดและล้างคิวรายวัน?')) return;
-
-    let sales = 0;
-    let exps = 0;
-    let expDetails = [];
-
-    dailyHistory.forEach(i => {
-        if (i.type === 'SALE') {
-            sales += i.amount;
-        } else if (i.type === 'EXPENSE') {
-            exps += i.amount;
-            expDetails.push(`${i.note}(${i.amount})`);
+            // หน่วงเวลาแป๊บนึงให้พิมพ์เสร็จ แล้วค่อยล้างตะกร้า+รันคิวถัดไป
+            setTimeout(() => {
+                q++;
+                localStorage.setItem('na_coco_q', q);
+                clearCart();
+                renderApp();
+            }, 1500);
         }
-    });
 
-    const reportData = {
-        type: "DAILY_REPORT",
-        date: new Date().toLocaleDateString('th-TH'),
-        totalSales: sales,
-        totalExpense: exps,
-        netAmount: sales - exps,
-        expenseNote: expDetails.join(', ')
-    };
+        function printReceipt() {
+            // สั่งพิมพ์ตรง ๆ ผ่านระบบของ iPad ทันที ไม่ต้องแคปจอให้ติดบล็อกความปลอดภัย
+            window.print();
+        }
 
-    try {
-        await fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(reportData)
-        });
+        // --- ฟังก์ชันปิดยอดรายวัน (อัปเดตใหม่: สรุปยอดส่งเข้า Sheets) ---
+        async function sendDailyClose() {
+            if (!confirm('ยืนยันปิดยอดและล้างคิวรายวัน?')) return;
 
-        alert('ส่งปิดยอดและบันทึกรายละเอียดเรียบร้อยแล้ว!');
+            let sales = 0;
+            let exps = 0;
+            let expDetails = [];
 
-        // ล้างข้อมูลหลังส่งสำเร็จ
-        dailyHistory = [];
-        localStorage.setItem('na_coco_daily_log', '[]');
-        q = 1;
-        localStorage.setItem('na_coco_q', 1);
-        location.reload();
+            dailyHistory.forEach(i => {
+                if (i.type === 'SALE') {
+                    sales += i.amount;
+                } else if (i.type === 'EXPENSE') {
+                    exps += i.amount;
+                    expDetails.push(`${i.note}(${i.amount})`);
+                }
+            });
 
-    } catch (e) {
-        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e);
-    }
-}
+            const reportData = {
+                type: "DAILY_REPORT",
+                date: new Date().toLocaleDateString('th-TH'),
+                totalSales: sales,
+                totalExpense: exps,
+                netAmount: sales - exps,
+                expenseNote: expDetails.join(', ')
+            };
+
+            try {
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(reportData)
+                });
+
+                alert('ส่งปิดยอดและบันทึกรายละเอียดเรียบร้อยแล้ว!');
+
+                // ล้างข้อมูลหลังส่งสำเร็จ
+                dailyHistory = [];
+                localStorage.setItem('na_coco_daily_log', '[]');
+                q = 1;
+                localStorage.setItem('na_coco_q', 1);
+                location.reload();
+
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e);
+            }
+        }
 
         // --- ฟังก์ชันเสริม (เดิม) ---
         function openModifier(idx) { editingIndex = idx; document.getElementById('mod-title').innerText = cart[idx].name; document.getElementById('mod-note').value = cart[idx].note; setSweet(cart[idx].sweet); document.getElementById('modifier-modal').style.display = 'flex'; }
@@ -428,10 +426,12 @@ async function sendDailyClose() {
         function openAdmin() { document.getElementById('admin-modal').style.display = 'flex'; renderAdminMenu(); }
         function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
         function addNewMenuItem() { menuItems.push({ name: 'เมนูใหม่', price: 0, img: '', category: 'ทั่วไป' }); renderAdminMenu(); }
+        
         function renderAdminMenu() {
             const list = document.getElementById('admin-menu-list');
             list.innerHTML = menuItems.map((item, idx) => `<div class="bg-gray-50 p-3 rounded-xl border flex gap-3 items-center mb-2"><div class="relative w-12 h-12 bg-white rounded overflow-hidden border flex-shrink-0"><img src="${item.img || 'https://via.placeholder.com/50'}" class="w-full h-full object-cover"><button onclick="document.getElementById('file-${idx}').click()" class="absolute inset-0 bg-black/40 text-white text-[8px] flex items-center justify-center opacity-0 hover:opacity-100">เปลี่ยน</button><input type="file" id="file-${idx}" class="hidden" accept="image/*" onchange="processImage(this, 'menu', ${idx})"></div><div class="flex-grow space-y-1"><input type="text" value="${item.name}" onchange="menuItems[${idx}].name=this.value" class="w-full bg-transparent border-b text-[11px] font-bold outline-none"><div class="flex gap-2"><input type="number" value="${item.price}" onchange="menuItems[${idx}].price=Number(this.value)" class="w-16 border-b text-green-600 font-bold outline-none"><input type="text" value="${item.category || ''}" onchange="menuItems[${idx}].category=this.value" class="flex-grow border-b text-gray-400 text-[10px]" placeholder="หมวดหมู่"></div></div><button onclick="if(confirm('ลบ?')){ menuItems.splice(${idx},1); renderAdminMenu(); }" class="text-red-300 p-2"><i class="fas fa-trash-alt"></i></button></div>`).join('');
         }
+        
         function processImage(input, type, idx = null) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -453,63 +453,19 @@ async function sendDailyClose() {
                 reader.readAsDataURL(input.files[0]);
             }
         }
+        
         function saveSettings() { 
+            if(tempLogoData) { localStorage.setItem('na_coco_logo', tempLogoData); document.getElementById('main-logo').src = tempLogoData; document.getElementById('receipt-logo').src = tempLogoData; }
             localStorage.setItem('na_coco_addr', document.getElementById('shop-address-input').value);
             localStorage.setItem('na_coco_pp', document.getElementById('pp-input').value); 
             localStorage.setItem('na_coco_vat', document.getElementById('vat-rate-input').value);
-            if(tempLogoData) localStorage.setItem('na_coco_logo', tempLogoData);
-            localStorage.setItem('na_coco_menu', JSON.stringify(menuItems)); 
-            location.reload();
+            localStorage.setItem('na_coco_menu', JSON.stringify(menuItems));
+            document.getElementById('shop-address-display').innerText = document.getElementById('shop-address-input').value;
+            closeAdmin(); renderApp(); updateCart();
         }
 
-init();
-
-// 1. ประกาศตัวแปรไว้ด้านนอกสุด (เหลืออันเดียว)
-let btCharacteristic = null;
-
-// 2. ฟังก์ชันเชื่อมต่อบลูทูธ
-async function connectBluetooth() {
-    try {
-        const device = await navigator.bluetooth.requestDevice({
-            filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
-        });
-        
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-        
-        const characteristics = await service.getCharacteristics();
-        btCharacteristic = characteristics.find(c => 
-            c.properties.write || c.properties.writeWithoutResponse
-        );
-
-        if (btCharacteristic) {
-            document.getElementById('bt-status').classList.replace('text-gray-400', 'text-blue-500');
-            alert('เชื่อมต่อเครื่องพิมพ์ ณ Coco สำเร็จแล้วครับ! 🌴');
-        }
-    } catch (e) {
-        console.error("Bluetooth Error:", e);
-        alert('เชื่อมต่อไม่ได้: ' + e.message);
-    }
-}
-
-// 3. ฟังก์ชันสำหรับส่งข้อมูล
-async function sendToPrinter(data) {
-    if (!btCharacteristic) return;
-    for (let i = 0; i < data.length; i += 20) {
-        await btCharacteristic.writeValue(data.slice(i, i + 20));
-    }
-}
-
-// 4. ฟังก์ชันพิมพ์แบบข้อความ
-async function printViaBluetooth(text) {
-    if (!btCharacteristic) return;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text + '\n\n\n\n\n'); 
-    await sendToPrinter(data);
-}
-
-// ลบปีกกาที่เกินออกแล้ว
-</script>
+        // เริ่มต้นระบบเมื่อเปิดหน้าเว็บ
+        window.onload = init;
+    </script>
 </body>
 </html>
