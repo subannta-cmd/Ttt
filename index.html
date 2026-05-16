@@ -79,15 +79,20 @@
         filter: grayscale(100%) !important;
     }
 
-    /* 5. แก้ไขตัวกล่องใบเสร็จหลัก (ห้ามใช้ absolute เด็ดขาด) */
+ /* 5. ตั้งค่าตัวกล่องใบเสร็จหลัก บังคับความสูงล็อกไว้เลย */
     #receipt-area { 
         display: block !important;
-        position: relative !important; /* เปลี่ยนจาก absolute เป็น relative */
+        position: relative !important;
         float: none !important;
         width: 58mm !important; 
         max-width: 58mm !important;
+        
+        /* --- เพิ่ม 2 บรรทัดนี้ลงไปเพื่อโกงความสูง --- */
+        height: 150mm !important; /* บังคับกระดาษยาวขังไว้ 15 เซนติเมตร */
+        min-height: 150mm !important;
+        
         margin: 0 !important; 
-        padding: 5mm 4mm 20mm 4mm !important; /* ขยายระยะเว้นก้นกระดาษเผื่อใบมีดสับ */
+        padding: 5mm 4mm 20mm 4mm !important; 
         box-sizing: border-box !important;
     }
 
