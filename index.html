@@ -127,16 +127,27 @@
     color: black !important;
     margin-bottom: 4mm !important;
 }
-    /* ดีไซน์อื่นๆ ของคุณ (คงเดิม) */
     #receipt-area #receipt-q { 
-        font-size: 32px !important; 
-        font-weight: 900 !important;
-        border: 2px solid black !important;
-        display: inline-block !important;
-        padding: 1mm 4mm !important;
-        margin: 2mm 0 !important;
-        color: black !important;
-    }
+    font-size: 32px !important; 
+    font-weight: 900 !important;
+    border: 2px solid black !important;
+    display: inline-block !important;
+    padding: 1mm 4mm !important;
+    margin: 2mm 0 !important;
+    color: black !important;
+}
+
+/* ใช้คิวนี้ดันข้อความชื่อร้านขึ้นมาแสดงผลด้านบนเลขคิวแทน ออกชัวร์ไม่ทับไลน์ใคร */
+#receipt-area #receipt-q::before {
+    content: "ณ COCO\A INTEGRATED FARM SYSTEM" !important;
+    display: block !important;
+    white-space: pre-line !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    margin-bottom: 3mm !important;
+    border: none !important; /* ปลดขอบออกไม่ให้ติดกล่องสี่เหลี่ยม */
+}
 
     #cart-list > div { 
         border-bottom: 1.5px dashed black !important; 
