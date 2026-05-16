@@ -318,31 +318,13 @@
     const vatAmount = parseFloat(document.getElementById('txt-vat-amount').innerText.replace(/,/g, ''));
     const note = document.getElementById('receipt-note').value;
 
-    // --- ส่วนที่ 1: การพิมพ์ผ่าน Bluetooth แบบรูปภาพ (เพื่อให้มี Logo + QR) ---
-    if (btCharacteristic) {
-        try {
-            // อัปเดตวันที่ในหน้าใบเสร็จบนจอก่อนถ่ายภาพ
-            document.getElementById('cur-date').innerText = timeStr;
-            const receiptArea = document.getElementById('receipt-area');
+    // อัปเดตวันที่บนหน้าบิลฝั่งขวาให้เป็นเวลาปัจจุบันก่อนพิมพ์
+    document.getElementById('cur-date').innerText = timeStr;
 
-            // ถ่ายรูปส่วนใบเสร็จ (ต้องมี html2canvas library)
-            const canvas = await html2canvas(receiptArea, {
-                scale: 2, // ความคมชัดที่เหมาะสม
-                useCORS: true,
-                backgroundColor: "#ffffff"
-            });
+    // 🚨 ไม้ตาย: สั่งให้ iPad เปิดหน้าต่างสั่งพิมพ์ใบเสร็จทันที! (เด้งชัวร์ 100%)
+    window.print();
 
-            // เรียกใช้ฟังก์ชันในข้อ 2 เพื่อพิมพ์ภาพ
-            await printImageViaBluetooth(canvas);
-            
-            // สั่ง Feed กระดาษเพิ่ม 3 บรรทัดกันโดนตัด
-            await btCharacteristic.writeValue(new Uint8Array([0x1B, 0x64, 0x03])); 
-        } catch (err) {
-            console.error("Bluetooth Print Error:", err);
-        }
-    }
-
-    // --- ส่วนที่ 2: บันทึกข้อมูล (Sheets & History) ---
+    // --- บันทึกข้อมูลระบบหลังบ้าน (Sheets & History) ---
     dailyHistory.push({ 
         type: 'SALE', 
         time: new Date().toLocaleTimeString('th-TH'), 
@@ -351,7 +333,7 @@
     });
     localStorage.setItem('na_coco_daily_log', JSON.stringify(dailyHistory));
 
-    // ส่งข้อมูลไป Google Sheets
+    // มัดรวมรายการส่งเข้า Google Sheets ของร้าน ณ Coco
     const summaryMap = {};
     cart.forEach(item => { summaryMap[item.name] = (summaryMap[item.name] || 0) + item.qty; });
     const itemsText = Object.entries(summaryMap).map(([n, q]) => `${n}(${q})`).join(', ');
@@ -372,13 +354,13 @@
         console.error("Sheet Error:", e);
     }
 
-    // ล้างข้อมูลและเริ่มคิวใหม่
+    // หน่วงเวลาแป๊บนึงให้พิมพ์เสร็จ แล้วค่อยล้างตะกร้า+รันคิวถัดไป
     setTimeout(() => {
         q++;
         localStorage.setItem('na_coco_q', q);
         clearCart();
         renderApp();
-    }, 2000);
+    }, 1500);
 }
 function printReceipt() {
     // สั่งพิมพ์ตรง ๆ ผ่านระบบของ iPad ทันที ไม่ต้องแคปจอให้ติดบล็อกความปลอดภัย
