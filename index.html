@@ -33,47 +33,32 @@
             -webkit-user-select: none;
         }
 
-       #receipt-area img { 
-    width: 15mm !important; /* บีบโลโก้ให้เล็กจิ๋วลงอีกครึ่งหนึ่ง */
-    height: auto !important;
-    margin-bottom: 1mm;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}       
-    
-    @media print {
-    /* ซ่อนทุกอย่างบนหน้าจอ POS ยกเว้นรูปภาพใบเสร็จที่จะสร้างขึ้นมาใหม่ */
-    body * {
-        visibility: hidden;
-    }
-    #printed-receipt-image, #printed-receipt-image * {
-        visibility: visible;
-    }
-    #printed-receipt-image {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-}
-
-/* สไตล์สหรับรูปใบเสร็จจำลองบนหน้าจอ (ซ่อนไว้ก่อนพิมพ์) */
-#printed-receipt-image {
-    display: none;
-}
-    /* ให้มีแค่สไตล์เบสิกชุดนี้พอครับ เพื่อดึงโลโก้จริงกลับมาแสดงผลให้หน้าต่างแคปเจอ */
-#receipt-area img {
+     #receipt-area img {
     width: 25mm !important;
     height: auto !important;
     display: block !important;
     margin: 0 auto 2mm auto !important;
 }
 
-/* ลบพวก #receipt-area::before หรือ ::after ที่เป็นวงกลมคำว่า "ณ" ออกให้หมดเลยครับ */
-
+@media print {
+    /* ซ่อนส่วนควบคุมหน้าร้านทั้งหมดตอนสั่งพิมพ์ */
+    body * {
+        visibility: hidden;
+    }
+    /* ดึงเฉพาะกล่องใบเสร็จสีขาวฝั่งขวาออกมาพิมพ์ */
+    #receipt-area, #receipt-area * {
+        visibility: visible;
+    }
+    #receipt-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        /* 🚨 ไม้ตาย: ถมพื้นที่ว่างท้ายบิลเพิ่ม 60 มิลลิเมตร บังคับให้กระดาษไหลยาวออกครบจนจบรายการแน่นอน ไม่โดนตัดสั้นจู๋ */
+        padding-bottom: 60mm !important; 
+    }
+}
         .discount-unit-btn { padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #9ca3af; }
         .discount-unit-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
         .btn-confirm-order { animation: pulse-green 2s infinite; }
