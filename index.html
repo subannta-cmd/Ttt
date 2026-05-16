@@ -96,19 +96,25 @@
         box-sizing: border-box !important;
     }
 
-  /* 6. บรรทัดที่ 100 แทนที่ของเดิมทั้งหมดด้วยชุดนี้ครับ */
-#receipt-area img { 
-    width: 20mm !important; /* บีบขนาดโลโก้ลงเหลือ 2 เซนติเมตร เพื่อลดภาระ RAM เครื่องปริ้นท์ */
-    height: auto !important;
+  /* วางทับบรรทัดที่ 100 แทนที่ #receipt-area img เดิมทั้งหมด */
+#receipt-area img {
+    display: none !important; /* ซ่อนรูปภาพเจ้าปัญหาทิ้งไป */
+}
+
+/* สร้างโลโก้วงกลมมะพร้าวจำลองด้วยโค้ด เบาหวิว พิมพ์ออกชัวร์ */
+#receipt-area::before {
+    content: "ณ" !important;
     display: block !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    margin-bottom: 2mm !important;
-    
-    /* ⚡ ชุดคำสั่งไม้ตาย: สั่งรีดสี แปลงรูปให้กลายเป็นลายเส้นขาวดำสนิทแบบ Dot-matrix 100% ⚡ */
-    filter: grayscale(100%) brightness(1.2) contrast(5) !important;
-    -webkit-filter: grayscale(100%) brightness(1.2) contrast(5) !important;
-    mix-blend-mode: multiply !important;
+    width: 14mm !important;
+    height: 14mm !important;
+    line-height: 14mm !important;
+    border: 2px solid black !important;
+    border-radius: 50% !important; /* ทำเป็นทรงกลมลูกมะพร้าว */
+    margin: 0 auto 2mm auto !important;
+    text-align: center !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: black !important;
 }
 
     /* ดีไซน์อื่นๆ ของคุณ (คงเดิม) */
