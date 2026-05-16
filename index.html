@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Na COCO POS 🌴</title>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
 
-	 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-	
-    <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f4f7f4; overflow: hidden; }
         
         .menu-card { transition: all 0.2s; background: white; cursor: pointer; border-radius: 25px; border: 1px solid #f0f0f0; overflow: hidden; height: 100%; }
@@ -43,127 +40,28 @@
     margin-left: auto;
     margin-right: auto;
 }       
-     @media print {
-    /* 1. บังคับขนาดหน้ากระดาษม้วน 58mm แบบไม่จำกัดความสูง */
-    @page { 
-        size: 58mm auto; /* ถ้าเครื่องพิมพ์บางรุ่นบั๊ก ให้ใช้แค่ size: 58mm; */
-        margin: 0 !important; 
-    }
-
-    /* 2. ซ่อนส่วนประกอบเว็บทั้งหมดตามสูตรเดิม */
-    * {
-        color: #000000 !important;
-        background-color: #ffffff !important;
-        background-image: none !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        box-shadow: none !important;
-        text-shadow: none !important;
+    @media print {
+    /* ซ่อนทุกอย่างบนหน้าจอ POS ยกเว้นรูปภาพใบเสร็จที่จะสร้างขึ้นมาใหม่ */
+    body * {
         visibility: hidden;
     }
-
-    /* 3. เปิดให้เห็นเฉพาะใบเสร็จและลูกหลานทั้งหมด */
-    #receipt-area, #receipt-area * {
-        visibility: visible !important;
+    #printed-receipt-image, #printed-receipt-image * {
+        visibility: visible;
     }
-
-    /* 4. ปรับแก้โครงสร้างหลัก: เคลียร์ระบบระเบียบความสูงให้ไหลตามธรรมชาติ */
-    html, body {
-        background: white !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 58mm !important;
-        height: auto !important;     /* บังคับให้ความสูงยืดตามเนื้อหา */
-        overflow: visible !important; /* ป้องกันไม่ให้เนื้อหาถูกบีบตัด */
-        display: block !important;
-        filter: grayscale(100%) !important;
+    #printed-receipt-image {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
     }
-
- /* 5. ตั้งค่าตัวกล่องใบเสร็จหลัก บังคับความสูงล็อกไว้เลย */
-    #receipt-area { 
-        display: block !important;
-        position: relative !important;
-        float: none !important;
-        width: 58mm !important; 
-        max-width: 58mm !important;
-        
-        /* --- เพิ่ม 2 บรรทัดนี้ลงไปเพื่อโกงความสูง --- */
-        height: 150mm !important; /* บังคับกระดาษยาวขังไว้ 15 เซนติเมตร */
-        min-height: 150mm !important;
-        
-        margin: 0 !important; 
-        padding: 5mm 4mm 20mm 4mm !important; 
-        box-sizing: border-box !important;
-    }
-
-  /* วางทับบรรทัดที่ 100 แทนที่ #receipt-area img เดิมทั้งหมด */
-#receipt-area img {
-    display: none !important; /* ซ่อนรูปภาพเจ้าปัญหาทิ้งไป */
 }
 
-/* สร้างโลโก้วงกลมมะพร้าวจำลองด้วยโค้ด เบาหวิว พิมพ์ออกชัวร์ */
-#receipt-area::before {
-    content: "ณ" !important;
-    display: block !important;
-    width: 14mm !important;
-    height: 14mm !important;
-    line-height: 14mm !important;
-    border: 2px solid black !important;
-    border-radius: 50% !important; /* ทำเป็นทรงกลมลูกมะพร้าว */
-    margin: 0 auto 2mm auto !important;
-    text-align: center !important;
-    font-size: 18px !important;
-    font-weight: bold !important;
-    color: black !important;
+/* สไตล์สหรับรูปใบเสร็จจำลองบนหน้าจอ (ซ่อนไว้ก่อนพิมพ์) */
+#printed-receipt-image {
+    display: none;
 }
-/* ใส่ต่อท้ายใต้บรรทัดที่ 118 ได้เลยครับ */
-#receipt-area::after {
-    content: "ณ COCO\A INTEGRATED FARM SYSTEM" !important;
-    display: block !important;
-    white-space: pre-line !important; /* บังคับให้ขึ้นบรรทัดใหม่ตามรหัส \A */
-    text-align: center !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    color: black !important;
-    margin-bottom: 4mm !important;
-}
-    #receipt-area #receipt-q { 
-    font-size: 32px !important; 
-    font-weight: 900 !important;
-    border: 2px solid black !important;
-    display: inline-block !important;
-    padding: 1mm 4mm !important;
-    margin: 2mm 0 !important;
-    color: black !important;
-}
-
-/* ใช้คิวนี้ดันข้อความชื่อร้านขึ้นมาแสดงผลด้านบนเลขคิวแทน ออกชัวร์ไม่ทับไลน์ใคร */
-#receipt-area, #receipt-q::before {
-    content: "ณ COCO\A INTEGRATED FARM SYSTEM" !important;
-    display: block !important;
-    white-space: pre-line !important;
-    text-align: center !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    margin-bottom: 3mm !important;
-    border: none !important; /* ปลดขอบออกไม่ให้ติดกล่องสี่เหลี่ยม */
-}
-
-    #cart-list > div { 
-        border-bottom: 1.5px dashed black !important; 
-        padding-bottom: 4px !important; 
-        margin-bottom: 4px !important; 
-        display: flex !important; /* ป้องกันกล่องรายการสินค้าซ้อนหรือลอย */
-        justify-content: space-between !important;
-    }
-
-    #total-price {
-        font-size: 22px !important;
-        font-weight: bold !important;
-        color: black !important;
-        display: block !important;
-    }
-
     /* ข้อความขอบคุณท้ายใบเสร็จ */
     #receipt-area::after {
         content: "--- ขอบคุณที่ใช้บริการ ---" !important;
@@ -519,42 +417,37 @@
     }, 2000);
 }
 
-async function printImageViaBluetooth(canvas) {
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    const imgData = ctx.getImageData(0, 0, width, height).data;
-
-    // แปลงภาพเป็นขาวดำ (Threshold)
-    const pixels = [];
-    for (let i = 0; i < imgData.length; i += 4) {
-        // คำนวณค่าความสว่างเฉลี่ย
-        const avg = (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
-        pixels.push(avg < 128 ? 1 : 0); // ถ้ามืดให้เป็นสีดำ (1) ถ้าสว่างให้เป็นสีขาว (0)
-    }
-
-    const widthBytes = Math.ceil(width / 8);
-    const data = new Uint8Array(8 + widthBytes * height);
+function printReceipt() {
+    // 1. ดึงกล่องใบเสร็จสีขาวฝั่งขวามาเตรียมแปลงเป็นรูป
+    const receiptElement = document.getElementById('receipt-area'); 
     
-    // คำสั่ง ESC/POS มาตรฐานสำหรับพิมพ์รูปภาพ (GS v 0)
-    data[0] = 0x1D; data[1] = 0x76; data[2] = 0x30; data[3] = 0x00;
-    data[4] = widthBytes & 0xFF; data[5] = (widthBytes >> 8) & 0xFF;
-    data[6] = height & 0xFF; data[7] = (height >> 8) & 0xFF;
-
-    let pos = 8;
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < widthBytes; x++) {
-            let byte = 0;
-            for (let bit = 0; bit < 8; bit++) {
-                if (pixels[y * width + x * 8 + bit]) {
-                    byte |= (1 << (7 - bit));
-                }
-            }
-            data[pos++] = byte;
+    // 2. สั่งแปลงโฉมเป็นรูปภาพความละเอียดชัดเจนสำหรับเครื่องปริ้นท์ความร้อน
+    html2canvas(receiptElement, {
+        scale: 2, // เพิ่มความชัดของตัวอักษรและโลโก้
+        useCORS: true,
+        logging: false
+    }).then(canvas => {
+        // 3. สร้างแท็กรูปภาพมารองรับข้อมูล
+        let imgData = canvas.toDataURL('image/png');
+        
+        // เช็คว่ามีกล่องรูปภาพเดิมอยู่ไหม ถ้าไม่มีให้สร้างใหม่
+        let printContainer = document.getElementById('printed-receipt-image');
+        if (!printContainer) {
+            printContainer = document.createElement('img');
+            printContainer.id = 'printed-receipt-image';
+            document.body.appendChild(printContainer);
         }
-    }
-    // ส่งข้อมูลภาพไปยังเครื่องพิมพ์ผ่าน Bluetooth
-    await btCharacteristic.writeValue(data);
+        
+        // เอารูปใบเสร็จใส่เข้าไปแล้วสั่งพิมพ์ทันที!
+        printContainer.src = imgData;
+        printContainer.style.display = 'block';
+        
+        // เรียกคำสั่งพิมพ์ของ iPad
+        setTimeout(() => {
+            window.print();
+            printContainer.style.display = 'none'; // พิมพ์เสร็จแล้วซ่อนรูปคืน
+        }, 300);
+    });
 }
 
 // --- ฟังก์ชันปิดยอดรายวัน (อัปเดตใหม่: สรุปยอดส่งเข้า Sheets) ---
