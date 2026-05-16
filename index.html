@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ณ COCO POS 🌴</title>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+	 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
         .sweet-btn { border: 2px solid #e5e7eb; padding: 10px; border-radius: 15px; font-size: 14px; cursor: pointer; text-align: center; font-weight: bold; }
         .sweet-btn.active { border-color: #f97316; background-color: #fff7ed; color: #f97316; }
         
-     @media print {
+      @media print {
     @page { 
         size: 58mm auto; 
         margin: 0; 
@@ -37,7 +37,7 @@
     }
 
     /* 2. บังคับให้เฉพาะใบเสร็จและลูกหลานมองเห็น */
-    #receipt-area, #receipt-area *, #qr-area, #qr-area * {
+    #receipt-area, #receipt-area * {
         visibility: visible;
     }
 
@@ -55,13 +55,13 @@
         top: 0;
         left: 0;
         width: 100% !important; 
-        max-width: 44mm !important; 
+        max-width: 44mm !important; /* บีบให้เล็กลงนิดหน่อยเพื่อให้พิมพ์ในกระดาษ 58mm ได้ครบถ้วน */
         margin: 0 !important; 
-        padding: 2mm 2mm 40mm 2mm !important; 
+        padding: 2mm 2mm 10mm 2mm !important; /* เว้นท้าย 10mm กันใบมีดตัดโดนข้อความ */
         border: none !important;
     }
 
-    /* ปรับโลโก้ */
+    /* ปรับโลโก้ให้ดำชัดขึ้น */
     #receipt-area img { 
         width: 30mm !important; 
         height: auto !important;
@@ -103,28 +103,16 @@
         text-align: center;
         font-size: 10px;
         margin-top: 5mm;
-        padding-bottom: 10mm;
+        padding-bottom: 5mm;
         border-top: 1px solid black;
         color: black !important;
     }
 
-    /* ซ่อนส่วนประกอบ UI */
-    .print-hidden, .modal, #admin-panel, #confirm-section, .flex.h-screen {
+    /* บังคับซ่อน Modal และหน้าจอหลักแบบเด็ดขาด */
+    .print-hidden, .modal, #admin-panel, #confirm-section, #qr-area, .flex.h-screen {
         display: none !important;
     }
-
-    /* แสดง QR Code */
-    #qr-area {
-        display: block !important;
-        margin-top: 5mm;
-        text-align: center;
-    }
-    
-    #qr-area img {
-        width: 35mm !important; 
-        filter: grayscale(100%) contrast(2) !important;
-    }
-} /* จบ @media print แค่อันเดียว */
+}
 
         .discount-unit-btn { padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #9ca3af; }
         .discount-unit-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
@@ -390,45 +378,39 @@
             document.getElementById('hist-net').innerText = (sales - exps).toLocaleString();
         }
 
-        // --- ฟังก์ชันชำระเงิน (อัปเดตใหม่: Bluetooth + Print + Sheets) ---
-async function handleCheckout() {
+        async function handleCheckout() {
     if (cart.length === 0 || !isOrderConfirmed) return;
 
     const timeStr = new Date().toLocaleString('th-TH');
     const finalTotal = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, ''));
     const vatAmount = parseFloat(document.getElementById('txt-vat-amount').innerText.replace(/,/g, ''));
-    const queueNo = document.getElementById('receipt-q').innerText;
     const note = document.getElementById('receipt-note').value;
 
-    // 1. ส่งคำสั่งพิมพ์ผ่าน Bluetooth (อัปเดต: พิมพ์เป็นรูปภาพเพื่อให้เหมือนหน้าจอเป๊ะ)
+    // --- ส่วนที่ 1: การพิมพ์ผ่าน Bluetooth แบบรูปภาพ (เพื่อให้มี Logo + QR) ---
     if (btCharacteristic) {
         try {
-            const receiptElement = document.getElementById('receipt-area');
-            
-            // ใช้ html2canvas ถ่ายรูปพื้นที่ใบเสร็จ
-            const canvas = await html2canvas(receiptElement, {
-                scale: 2, // เพิ่มความชัดระดับ HD
-                useCORS: true, // อนุญาตให้ดึงรูปภาพข้ามโดเมน (ถ้ามี)
-                logging: false,
+            // อัปเดตวันที่ในหน้าใบเสร็จบนจอก่อนถ่ายภาพ
+            document.getElementById('cur-date').innerText = timeStr;
+            const receiptArea = document.getElementById('receipt-area');
+
+            // ถ่ายรูปส่วนใบเสร็จ (ต้องมี html2canvas library)
+            const canvas = await html2canvas(receiptArea, {
+                scale: 2, // ความคมชัดที่เหมาะสม
+                useCORS: true,
                 backgroundColor: "#ffffff"
             });
 
-            // ส่งรูปภาพไปยังเครื่องพิมพ์ (ใช้ฟังก์ชันแปลงภาพเป็นคำสั่งเครื่องพิมพ์)
-            await printImageViaBluetooth(canvas); 
+            // เรียกใช้ฟังก์ชันในข้อ 2 เพื่อพิมพ์ภาพ
+            await printImageViaBluetooth(canvas);
             
-        } catch (error) {
-            console.error("Bluetooth Print Error:", error);
-            // ถ้าพิมพ์รูปภาพพลาด ให้สำรองด้วยการพิมพ์ข้อความแบบเดิม
-            let fallbackTxt = `   Na COCO\nคิว: ${queueNo}\nรวม: ${finalTotal}\n\n\n\n`;
-            await printViaBluetooth(fallbackTxt);
+            // สั่ง Feed กระดาษเพิ่ม 3 บรรทัดกันโดนตัด
+            await btCharacteristic.writeValue(new Uint8Array([0x1B, 0x64, 0x03])); 
+        } catch (err) {
+            console.error("Bluetooth Print Error:", err);
         }
     }
 
-    // 2. อัปเดตวันที่และสั่งพิมพ์ผ่านหน้าเบราว์เซอร์
-    document.getElementById('cur-date').innerText = timeStr;
-    window.print();
-
-    // 3. บันทึกข้อมูลเข้าประวัติในเครื่อง
+    // --- ส่วนที่ 2: บันทึกข้อมูล (Sheets & History) ---
     dailyHistory.push({ 
         type: 'SALE', 
         time: new Date().toLocaleTimeString('th-TH'), 
@@ -437,7 +419,7 @@ async function handleCheckout() {
     });
     localStorage.setItem('na_coco_daily_log', JSON.stringify(dailyHistory));
 
-    // 4. สรุปรายการสินค้าและส่งข้อมูลไปที่ Google Sheets
+    // ส่งข้อมูลไป Google Sheets
     const summaryMap = {};
     cart.forEach(item => { summaryMap[item.name] = (summaryMap[item.name] || 0) + item.qty; });
     const itemsText = Object.entries(summaryMap).map(([n, q]) => `${n}(${q})`).join(', ');
@@ -458,13 +440,51 @@ async function handleCheckout() {
         console.error("Sheet Error:", e);
     }
 
-    // 5. ล้างข้อมูลและเพิ่มคิวถัดไป
+    // ล้างข้อมูลและเริ่มคิวใหม่
     setTimeout(() => {
         q++;
         localStorage.setItem('na_coco_q', q);
         clearCart();
         renderApp();
-    }, 1000);
+    }, 2000);
+}
+
+async function printImageViaBluetooth(canvas) {
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const imgData = ctx.getImageData(0, 0, width, height).data;
+
+    // แปลงภาพเป็นขาวดำ (Threshold)
+    const pixels = [];
+    for (let i = 0; i < imgData.length; i += 4) {
+        // คำนวณค่าความสว่างเฉลี่ย
+        const avg = (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
+        pixels.push(avg < 128 ? 1 : 0); // ถ้ามืดให้เป็นสีดำ (1) ถ้าสว่างให้เป็นสีขาว (0)
+    }
+
+    const widthBytes = Math.ceil(width / 8);
+    const data = new Uint8Array(8 + widthBytes * height);
+    
+    // คำสั่ง ESC/POS มาตรฐานสำหรับพิมพ์รูปภาพ (GS v 0)
+    data[0] = 0x1D; data[1] = 0x76; data[2] = 0x30; data[3] = 0x00;
+    data[4] = widthBytes & 0xFF; data[5] = (widthBytes >> 8) & 0xFF;
+    data[6] = height & 0xFF; data[7] = (height >> 8) & 0xFF;
+
+    let pos = 8;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < widthBytes; x++) {
+            let byte = 0;
+            for (let bit = 0; bit < 8; bit++) {
+                if (pixels[y * width + x * 8 + bit]) {
+                    byte |= (1 << (7 - bit));
+                }
+            }
+            data[pos++] = byte;
+        }
+    }
+    // ส่งข้อมูลภาพไปยังเครื่องพิมพ์ผ่าน Bluetooth
+    await btCharacteristic.writeValue(data);
 }
 
 // --- ฟังก์ชันปิดยอดรายวัน (อัปเดตใหม่: สรุปยอดส่งเข้า Sheets) ---
