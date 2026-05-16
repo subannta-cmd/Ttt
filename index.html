@@ -40,6 +40,7 @@
     margin-left: auto;
     margin-right: auto;
 }       
+    
     @media print {
     /* ซ่อนทุกอย่างบนหน้าจอ POS ยกเว้นรูปภาพใบเสร็จที่จะสร้างขึ้นมาใหม่ */
     body * {
@@ -62,23 +63,15 @@
 #printed-receipt-image {
     display: none;
 }
-    /* ข้อความขอบคุณท้ายใบเสร็จ */
-    #receipt-area::after {
-        content: "--- ขอบคุณที่ใช้บริการ ---" !important;
-        display: block !important;
-        text-align: center !important;
-        font-size: 10px !important;
-        margin-top: 5mm !important;
-        padding-bottom: 5mm !important;
-        border-top: 1px solid black !important;
-        color: black !important;
-    }
-
-    /* บังคับซ่อนส่วนที่เหลือในหน้าเว็บ */
-    .print-hidden, .modal, #admin-panel, #confirm-section, #qr-area, .flex.h-screen {
-        display: none !important;
-    }
+    /* ให้มีแค่สไตล์เบสิกชุดนี้พอครับ เพื่อดึงโลโก้จริงกลับมาแสดงผลให้หน้าต่างแคปเจอ */
+#receipt-area img {
+    width: 25mm !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto 2mm auto !important;
 }
+
+/* ลบพวก #receipt-area::before หรือ ::after ที่เป็นวงกลมคำว่า "ณ" ออกให้หมดเลยครับ */
 
         .discount-unit-btn { padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #9ca3af; }
         .discount-unit-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
