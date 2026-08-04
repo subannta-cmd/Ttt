@@ -2,57 +2,127 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Na COCO POS 🌴</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ณ COCO POS 🌴</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f4f7f4; overflow: hidden; }
+        .menu-card { transition: all 0.2s; background: white; cursor: pointer; border-radius: 25px; border: 1px solid #f0f0f0; overflow: hidden; height: 100%; }
+        .menu-card:active { transform: scale(0.95); background-color: #f0fdf4; }
+        .menu-img-display { width: 100%; height: 110px; object-fit: cover; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .category-header { grid-column: 1 / -1; margin-top: 1.5rem; border-left: 4px solid #166534; padding-left: 0.75rem; margin-bottom: 0.5rem; }
+        .sweet-btn { border: 2px solid #e5e7eb; padding: 10px; border-radius: 15px; font-size: 14px; cursor: pointer; text-align: center; font-weight: bold; }
+        .sweet-btn.active { border-color: #f97316; background-color: #fff7ed; color: #f97316; }
+        
+        @media print {
+            @page { 
+                size: 58mm auto; 
+                margin: 0; 
+            }
 
-   <style>
-    body { font-family: 'Kanit', sans-serif; background-color: #f4f7f4; overflow-x: hidden; }
-    .menu-card { transition: all 0.2s; background: white; cursor: pointer; }
-    .menu-card:active { transform: scale(0.95); background-color: #f0fdf4; }
-    .menu-img-display { width: 100%; height: 110px; object-fit: cover; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-    .category-header { grid-column: 1 / -1; margin-top: 1.5rem; border-left: 4px solid #166534; padding-left: 0.75rem; margin-bottom: 0.5rem; }
-    .sweet-btn { border: 2px solid #e5e7eb; padding: 10px; border-radius: 15px; font-size: 14px; cursor: pointer; text-align: center; font-weight: bold; }
-    .sweet-btn.active { border-color: #f97316; background-color: #fff7ed; color: #f97316; }
-    
-    /* สไตล์โลโก้จัดกึ่งกลางสวยงาม */
-    #receipt-area img {
-        width: 25mm !important;
-        height: auto !important;
-        display: block !important;
-        margin: 0 auto 2mm auto !important;
-    }
+            * {
+                color: #000000 !important;
+                background-color: #ffffff !important;
+                background-image: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+                visibility: hidden;
+            }
 
-    .discount-unit-btn { padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #9ca3af; }
-    .discount-unit-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
-    .btn-confirm-order { animation: pulse-green 2s infinite; }
-    @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+            #receipt-area, #receipt-area * {
+                visibility: visible;
+            }
 
-    /* สูตรดั้งเดิมของ iPad + เพิ่มความยาวก้นบิลกันกระดาษหด */
-    @media print {
-        body * {
-            visibility: hidden;
+            body { 
+                background: white !important; 
+                margin: 0; 
+                padding: 0;
+                filter: grayscale(100%) !important;
+            }
+
+            #receipt-area { 
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100% !important; 
+                max-width: 44mm !important;
+                margin: 0 !important; 
+                padding: 2mm 2mm 10mm 2mm !important;
+                border: none !important;
+            }
+
+            #receipt-area img { 
+                width: 30mm !important; 
+                height: auto !important;
+                filter: grayscale(100%) contrast(2) !important; 
+                margin-bottom: 2mm;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            /* รองรับการพิมพ์ QR Code ในสลิป */
+            #qr-area {
+                display: block !important;
+                border: none !important;
+                padding: 2mm 0 !important;
+                margin-top: 2mm !important;
+            }
+
+            #qr-area img {
+                width: 28mm !important;
+                height: 28mm !important;
+            }
+
+            #receipt-area #receipt-q { 
+                font-size: 36px !important; 
+                font-weight: 900 !important;
+                border: 3px solid black !important;
+                display: inline-block;
+                padding: 2mm 5mm;
+                margin: 2mm 0;
+                color: black !important;
+            }
+
+            #cart-list > div { 
+                border-bottom: 1.5px dashed black !important; 
+                padding-bottom: 4px !important; 
+                margin-bottom: 4px !important; 
+            }
+
+            #total-price {
+                font-size: 24px !important;
+                font-weight: bold !important;
+                color: black !important;
+            }
+
+            #receipt-area::after {
+                content: "--- ขอบคุณที่ใช้บริการ ---";
+                display: block;
+                text-align: center;
+                font-size: 10px;
+                margin-top: 5mm;
+                padding-bottom: 5mm;
+                border-top: 1px solid black;
+                color: black !important;
+            }
+
+            .print-hidden, .modal, #admin-panel, #confirm-section, .flex.h-screen {
+                display: none !important;
+            }
         }
-        #receipt-area, #receipt-area * {
-            visibility: visible;
-        }
-        #receipt-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            /* เพิ่มความยาวท้ายบิล 60 มิลลิเมตร บังคับกระดาษไหลยาวจนจบรายการ */
-            padding-bottom: 60mm !important; 
-        }
-    }
-    
-</style>
+
+        .discount-unit-btn { padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #9ca3af; }
+        .discount-unit-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
+        .btn-confirm-order { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+    </style>
 </head>
 <body class="text-gray-800">
 
@@ -106,7 +176,10 @@
     <div id="admin-modal" class="modal">
         <div class="bg-white rounded-[30px] w-full max-w-md p-6 shadow-2xl m-4 flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-green-800"><i class="fas fa-cog"></i> ตั้งค่าระบบ</h2>
+                <div class="flex items-center gap-2">
+                    <button id="bt-status" onclick="connectBluetooth()" class="p-3 bg-white border rounded-full text-gray-400 shadow-sm"><i class="fab fa-bluetooth-b"></i></button>
+                    <h2 class="text-xl font-bold text-green-800"><i class="fas fa-cog"></i> ตั้งค่าระบบ</h2>
+                </div>
                 <button onclick="closeAdmin()" class="text-2xl text-gray-400">&times;</button>
             </div>
             <div class="space-y-4 overflow-y-auto pr-2 flex-grow">
@@ -201,6 +274,9 @@
         let editingIndex = null;
         let selectedSweet = '100%';
         let isOrderConfirmed = false;
+        let btCharacteristic = null;
+
+        window.onload = init;
 
         function init() { 
             const savedLogo = localStorage.getItem('na_coco_logo');
@@ -250,7 +326,23 @@
             let subtotal = 0;
             list.innerHTML = cart.map((item, idx) => {
                 subtotal += (item.price * item.qty);
-                return `<div class="bg-white p-3 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><div onclick="openModifier(${idx})" class="cursor-pointer"><span class="text-xs font-bold block">${item.name}</span><span class="text-[9px] text-orange-500 font-bold uppercase">หวาน ${item.sweet} ${item.note ? '| ' + item.note : ''}</span></div><span class="text-xs font-black">${(item.price * item.qty).toLocaleString()}.-</span></div><div class="flex justify-between items-center print-hidden"><div class="flex items-center gap-3 bg-gray-50 rounded-lg px-2 py-1"><button onclick="changeQty(${idx}, -1)" class="text-orange-500 font-black">-</button><span class="text-xs font-bold w-4 text-center">${item.qty}</span><button onclick="changeQty(${idx}, 1)" class="text-orange-500 font-black">+</button></div><button onclick="cart.splice(${idx},1); isOrderConfirmed=false; updateCart();" class="text-red-200 text-xs"><i class="fas fa-trash"></i></button></div></div>`;
+                return `<div class="bg-white p-3 rounded-xl border shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <div onclick="openModifier(${idx})" class="cursor-pointer">
+                            <span class="text-xs font-bold block">${item.name}</span>
+                            <span class="text-[9px] text-orange-500 font-bold uppercase">หวาน ${item.sweet} ${item.note ? '| ' + item.note : ''}</span>
+                        </div>
+                        <span class="text-xs font-black">${(item.price * item.qty).toLocaleString()}.-</span>
+                    </div>
+                    <div class="flex justify-between items-center print-hidden">
+                        <div class="flex items-center gap-3 bg-gray-50 rounded-lg px-2 py-1">
+                            <button onclick="changeQty(${idx}, -1)" class="text-orange-500 font-black">-</button>
+                            <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
+                            <button onclick="changeQty(${idx}, 1)" class="text-orange-500 font-black">+</button>
+                        </div>
+                        <button onclick="cart.splice(${idx},1); isOrderConfirmed=false; updateCart();" class="text-red-200 text-xs"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
             }).join('');
 
             if (cart.length > 0 && !isOrderConfirmed) {
@@ -309,21 +401,38 @@
             document.getElementById('hist-net').innerText = (sales - exps).toLocaleString();
         }
 
+        // --- ฟังก์ชันชำระเงิน ---
         async function handleCheckout() {
             if (cart.length === 0 || !isOrderConfirmed) return;
 
             const timeStr = new Date().toLocaleString('th-TH');
             const finalTotal = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, ''));
             const vatAmount = parseFloat(document.getElementById('txt-vat-amount').innerText.replace(/,/g, ''));
+            const queueNo = document.getElementById('receipt-q').innerText;
             const note = document.getElementById('receipt-note').value;
 
-            // อัปเดตวันที่บนหน้าบิลฝั่งขวาให้เป็นเวลาปัจจุบันก่อนพิมพ์
-            document.getElementById('cur-date').innerText = timeStr;
+            // 1. สั่งพิมพ์ผ่าน Bluetooth (รวมระดับความหวานและหมายเหตุ)
+            if (btCharacteristic) {
+                let txt = `    Na Coco\n`;
+                txt += `คิว: ${queueNo}\n`;
+                txt += `เวลา: ${timeStr}\n`;
+                txt += `--------------------------\n`;
+                cart.forEach(i => {
+                    txt += `${i.name}\n`;
+                    txt += `  [หวาน ${i.sweet}${i.note ? ' | ' + i.note : ''}]\n`;
+                    txt += `x${i.qty}          ${(i.price * i.qty).toLocaleString()} .-\n`;
+                });
+                txt += `--------------------------\n`;
+                txt += `รวมทั้งสิ้น:    ${finalTotal.toLocaleString()} .-\n`;
+                txt += `\n   ขอบคุณที่ใช้บริการ 🙏\n\n\n\n\n`;
+                await printViaBluetooth(txt);
+            }
 
-            // 🚨 ไม้ตาย: สั่งให้ iPad เปิดหน้าต่างสั่งพิมพ์ใบเสร็จทันที! (เด้งชัวร์ 100%)
+            // 2. อัปเดตวันที่และสั่งพิมพ์เบราว์เซอร์
+            document.getElementById('cur-date').innerText = timeStr;
             window.print();
 
-            // --- บันทึกข้อมูลระบบหลังบ้าน (History) ---
+            // 3. บันทึกข้อมูล
             dailyHistory.push({ 
                 type: 'SALE', 
                 time: new Date().toLocaleTimeString('th-TH'), 
@@ -332,10 +441,13 @@
             });
             localStorage.setItem('na_coco_daily_log', JSON.stringify(dailyHistory));
 
-            // มัดรวมรายการส่งเข้า Google Sheets ของร้าน ณ Coco
+            // 4. สรุปรายการส่ง Google Sheets
             const summaryMap = {};
-            cart.forEach(item => { summaryMap[item.name] = (summaryMap[item.name] || 0) + item.qty; });
-            const itemsText = Object.entries(summaryMap).map(([n, q]) => `${n}(${q})`).join(', ');
+            cart.forEach(item => { 
+                const itemDetail = `${item.name}(หวาน ${item.sweet}${item.note ? ' ' + item.note : ''})`;
+                summaryMap[itemDetail] = (summaryMap[itemDetail] || 0) + item.qty; 
+            });
+            const itemsText = Object.entries(summaryMap).map(([n, q]) => `${n} x${q}`).join(', ');
 
             try {
                 fetch(scriptURL, {
@@ -353,21 +465,15 @@
                 console.error("Sheet Error:", e);
             }
 
-            // หน่วงเวลาแป๊บนึงให้พิมพ์เสร็จ แล้วค่อยล้างตะกร้า+รันคิวถัดไป
+            // 5. ล้างข้อมูล คิวถัดไป
             setTimeout(() => {
                 q++;
                 localStorage.setItem('na_coco_q', q);
                 clearCart();
                 renderApp();
-            }, 1500);
+            }, 1000);
         }
 
-        function printReceipt() {
-            // สั่งพิมพ์ตรง ๆ ผ่านระบบของ iPad ทันที ไม่ต้องแคปจอให้ติดบล็อกความปลอดภัย
-            window.print();
-        }
-
-        // --- ฟังก์ชันปิดยอดรายวัน (อัปเดตใหม่: สรุปยอดส่งเข้า Sheets) ---
         async function sendDailyClose() {
             if (!confirm('ยืนยันปิดยอดและล้างคิวรายวัน?')) return;
 
@@ -400,9 +506,7 @@
                     body: JSON.stringify(reportData)
                 });
 
-                alert('ส่งปิดยอดและบันทึกรายละเอียดเรียบร้อยแล้ว!');
-
-                // ล้างข้อมูลหลังส่งสำเร็จ
+                alert('ส่งปิดยอดเรียบร้อยแล้ว!');
                 dailyHistory = [];
                 localStorage.setItem('na_coco_daily_log', '[]');
                 q = 1;
@@ -414,7 +518,32 @@
             }
         }
 
-        // --- ฟังก์ชันเสริม (เดิม) ---
+        // --- ฟังก์ชันเชื่อมต่อ Bluetooth Printer ---
+        async function connectBluetooth() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                btCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                document.getElementById('bt-status').classList.replace('text-gray-400', 'text-blue-500');
+                alert('เชื่อมต่อเครื่องพิมพ์บลูทูธสำเร็จ!');
+            } catch (e) {
+                console.error(e);
+                alert('ไม่สามารถเชื่อมต่อบลูทูธได้');
+            }
+        }
+
+        async function printViaBluetooth(text) {
+            if (!btCharacteristic) return;
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            await btCharacteristic.writeValue(data);
+        }
+
+        // --- ฟังก์ชันทั่วไป ---
         function openModifier(idx) { editingIndex = idx; document.getElementById('mod-title').innerText = cart[idx].name; document.getElementById('mod-note').value = cart[idx].note; setSweet(cart[idx].sweet); document.getElementById('modifier-modal').style.display = 'flex'; }
         function setSweet(val) { selectedSweet = val; document.querySelectorAll('.sweet-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-val') === val)); }
         function saveModifier() { if (editingIndex !== null) { cart[editingIndex].sweet = selectedSweet; cart[editingIndex].note = document.getElementById('mod-note').value; isOrderConfirmed = false; updateCart(); } document.getElementById('modifier-modal').style.display = 'none'; }
@@ -429,43 +558,51 @@
         
         function renderAdminMenu() {
             const list = document.getElementById('admin-menu-list');
-            list.innerHTML = menuItems.map((item, idx) => `<div class="bg-gray-50 p-3 rounded-xl border flex gap-3 items-center mb-2"><div class="relative w-12 h-12 bg-white rounded overflow-hidden border flex-shrink-0"><img src="${item.img || 'https://via.placeholder.com/50'}" class="w-full h-full object-cover"><button onclick="document.getElementById('file-${idx}').click()" class="absolute inset-0 bg-black/40 text-white text-[8px] flex items-center justify-center opacity-0 hover:opacity-100">เปลี่ยน</button><input type="file" id="file-${idx}" class="hidden" accept="image/*" onchange="processImage(this, 'menu', ${idx})"></div><div class="flex-grow space-y-1"><input type="text" value="${item.name}" onchange="menuItems[${idx}].name=this.value" class="w-full bg-transparent border-b text-[11px] font-bold outline-none"><div class="flex gap-2"><input type="number" value="${item.price}" onchange="menuItems[${idx}].price=Number(this.value)" class="w-16 border-b text-green-600 font-bold outline-none"><input type="text" value="${item.category || ''}" onchange="menuItems[${idx}].category=this.value" class="flex-grow border-b text-gray-400 text-[10px]" placeholder="หมวดหมู่"></div></div><button onclick="if(confirm('ลบ?')){ menuItems.splice(${idx},1); renderAdminMenu(); }" class="text-red-300 p-2"><i class="fas fa-trash-alt"></i></button></div>`).join('');
+            list.innerHTML = menuItems.map((item, idx) => `
+                <div class="bg-gray-50 p-3 rounded-xl border flex gap-3 items-center mb-2">
+                    <div class="relative w-12 h-12 bg-white rounded overflow-hidden border flex-shrink-0">
+                        <img src="${item.img || 'https://via.placeholder.com/50'}" class="w-full h-full object-cover">
+                        <button onclick="document.getElementById('file-${idx}').click()" class="absolute inset-0 bg-black/40 text-white text-[9px] flex items-center justify-center opacity-0 hover:opacity-100">เปลี่ยน</button>
+                        <input type="file" id="file-${idx}" accept="image/*" class="hidden" onchange="processImage(this, ${idx})">
+                    </div>
+                    <div class="flex-grow space-y-1">
+                        <input type="text" value="${item.name}" onchange="menuItems[${idx}].name=this.value" class="w-full p-1 border rounded text-xs">
+                        <div class="flex gap-1">
+                            <input type="number" value="${item.price}" onchange="menuItems[${idx}].price=parseFloat(this.value)" class="w-20 p-1 border rounded text-xs">
+                            <input type="text" value="${item.category || 'ทั่วไป'}" onchange="menuItems[${idx}].category=this.value" class="flex-grow p-1 border rounded text-xs" placeholder="หมวดหมู่">
+                        </div>
+                    </div>
+                    <button onclick="menuItems.splice(${idx},1); renderAdminMenu();" class="text-red-400 p-2"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
         }
-        
-        function processImage(input, type, idx = null) {
+
+        function saveSettings() {
+            localStorage.setItem('na_coco_menu', JSON.stringify(menuItems));
+            localStorage.setItem('na_coco_addr', document.getElementById('shop-address-input').value);
+            localStorage.setItem('na_coco_pp', document.getElementById('pp-input').value);
+            localStorage.setItem('na_coco_vat', document.getElementById('vat-rate-input').value);
+            if(tempLogoData) localStorage.setItem('na_coco_logo', tempLogoData);
+            alert('บันทึกการตั้งค่าเรียบร้อยแล้ว');
+            closeAdmin();
+            init();
+        }
+
+        function processImage(input, target) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 600;
-                        let width = img.width, height = img.height;
-                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        canvas.width = width; canvas.height = height;
-                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                        const data = canvas.toDataURL('image/jpeg', 0.7);
-                        if (type === 'logo') { tempLogoData = data; document.getElementById('admin-logo-preview').src = data; }
-                        else if (idx !== null) { menuItems[idx].img = data; renderAdminMenu(); }
-                    };
-                    img.src = e.target.result;
-                };
+                    if (target === 'logo') {
+                        tempLogoData = e.target.result;
+                        document.getElementById('admin-logo-preview').src = e.target.result;
+                    } else {
+                        menuItems[target].img = e.target.result;
+                        renderAdminMenu();
+                    }
+                }
                 reader.readAsDataURL(input.files[0]);
             }
         }
-        
-        function saveSettings() { 
-            if(tempLogoData) { localStorage.setItem('na_coco_logo', tempLogoData); document.getElementById('main-logo').src = tempLogoData; document.getElementById('receipt-logo').src = tempLogoData; }
-            localStorage.setItem('na_coco_addr', document.getElementById('shop-address-input').value);
-            localStorage.setItem('na_coco_pp', document.getElementById('pp-input').value); 
-            localStorage.setItem('na_coco_vat', document.getElementById('vat-rate-input').value);
-            localStorage.setItem('na_coco_menu', JSON.stringify(menuItems));
-            document.getElementById('shop-address-display').innerText = document.getElementById('shop-address-input').value;
-            closeAdmin(); renderApp(); updateCart();
-        }
-
-        // เริ่มต้นระบบเมื่อเปิดหน้าเว็บ
-        window.onload = init;
     </script>
 </body>
 </html>
