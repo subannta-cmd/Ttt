@@ -17,6 +17,14 @@
         .sweet-btn { border: 2px solid #e5e7eb; padding: 10px; border-radius: 15px; font-size: 14px; cursor: pointer; text-align: center; font-weight: bold; }
         .sweet-btn.active { border-color: #f97316; background-color: #fff7ed; color: #f97316; }
         
+        .discount-unit-btn { padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #9ca3af; }
+        .discount-unit-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
+        .btn-confirm-order { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
+        /* Style ปรินต์ */
+        #daily-receipt-area { display: none; }
+
         @media print {
             @page { 
                 size: 58mm auto; 
@@ -31,21 +39,20 @@
                 print-color-adjust: exact !important;
                 box-shadow: none !important;
                 text-shadow: none !important;
-                visibility: hidden;
-            }
-
-            #receipt-area, #receipt-area * {
-                visibility: visible;
             }
 
             body { 
                 background: white !important; 
                 margin: 0; 
                 padding: 0;
-                filter: grayscale(100%) !important;
             }
 
-            #receipt-area { 
+            .print-hidden, .modal, #admin-panel, #confirm-section, .flex.h-screen {
+                display: none !important;
+            }
+
+            /* สลิปออเดอร์ */
+            body.print-order #receipt-area { 
                 display: block !important;
                 position: absolute;
                 top: 0;
@@ -57,70 +64,38 @@
                 border: none !important;
             }
 
-            #receipt-area img { 
-                width: 30mm !important; 
+            /* สลิปปิดยอด */
+            body.print-daily #daily-receipt-area { 
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100% !important; 
+                max-width: 44mm !important;
+                margin: 0 !important; 
+                padding: 2mm 2mm 10mm 2mm !important;
+                border: none !important;
+                font-size: 11px;
+            }
+
+            #receipt-area img, #daily-receipt-area img { 
+                width: 25mm !important; 
                 height: auto !important;
-                filter: grayscale(100%) contrast(2) !important; 
                 margin-bottom: 2mm;
                 display: block;
                 margin-left: auto;
                 margin-right: auto;
             }
 
-            #qr-area {
-                display: block !important;
-                border: none !important;
-                padding: 2mm 0 !important;
-                margin-top: 2mm !important;
-            }
-
-            #qr-area img {
-                width: 28mm !important;
-                height: 28mm !important;
-            }
-
             #receipt-area #receipt-q { 
-                font-size: 36px !important; 
+                font-size: 32px !important; 
                 font-weight: 900 !important;
-                border: 3px solid black !important;
+                border: 2px solid black !important;
                 display: inline-block;
-                padding: 2mm 5mm;
+                padding: 1mm 4mm;
                 margin: 2mm 0;
-                color: black !important;
-            }
-
-            #cart-list > div { 
-                border-bottom: 1.5px dashed black !important; 
-                padding-bottom: 4px !important; 
-                margin-bottom: 4px !important; 
-            }
-
-            #total-price {
-                font-size: 24px !important;
-                font-weight: bold !important;
-                color: black !important;
-            }
-
-            #receipt-area::after {
-                content: "--- ขอบคุณที่ใช้บริการ ---";
-                display: block;
-                text-align: center;
-                font-size: 10px;
-                margin-top: 5mm;
-                padding-bottom: 5mm;
-                border-top: 1px solid black;
-                color: black !important;
-            }
-
-            .print-hidden, .modal, #admin-panel, #confirm-section, .flex.h-screen {
-                display: none !important;
             }
         }
-
-        .discount-unit-btn { padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #9ca3af; }
-        .discount-unit-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
-        .btn-confirm-order { animation: pulse-green 2s infinite; }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
     </style>
 </head>
 <body class="text-gray-800">
@@ -132,7 +107,7 @@
             <div class="grid grid-cols-3 gap-3 mb-6">
                 <div onclick="setSweet('0%')" class="sweet-btn" data-val="0%">0%</div>
                 <div onclick="setSweet('50%')" class="sweet-btn" data-val="50%">50%</div>
-                <div onclick="setSweet('100%')" class="sweet-btn active" data-val="100%">100%</div>
+                <div onclick="setSweet('100%')" class="sweet-btn" data-val="100%">100%</div>
             </div>
             <div class="mb-6">
                 <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block">หมายเหตุเพิ่มเติม</label>
@@ -168,9 +143,8 @@
                     <div id="daily-log-list" class="space-y-2 text-[11px]"></div>
                 </div>
             </div>
-            <div class="pt-4 mt-2 border-t flex gap-2">
-                <button onclick="printDailyClose()" class="w-1/3 bg-gray-700 text-white py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2"><i class="fas fa-print"></i> พิมพ์ยอด</button>
-                <button onclick="sendDailyClose()" class="w-2/3 bg-orange-500 text-white py-4 rounded-2xl font-bold shadow-lg">ส่งปิดยอดรายวัน</button>
+            <div class="pt-4 mt-2 border-t">
+                <button onclick="sendDailyClose()" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-bold shadow-lg">ส่งปิดยอดรายวัน</button>
             </div>
         </div>
     </div>
@@ -225,7 +199,7 @@
             <div class="p-4 text-center border-b border-dashed">
                 <img id="receipt-logo" src="https://i.ibb.co/LzfNqfX/image-1aad44.png" class="w-12 h-12 object-contain mx-auto mb-2">
                 <div id="shop-address-display" class="text-[9px] text-gray-500 mb-2 whitespace-pre-line leading-tight"></div>
-                <h2 id="receipt-header-title" class="font-black text-green-800 text-[9px] uppercase">RECEIPT / ใบเสร็จ</h2>
+                <h2 class="font-black text-green-800 text-[9px] uppercase">RECEIPT / ใบเสร็จ</h2>
                 <div id="receipt-q" class="text-4xl font-black text-green-900 my-1">#01</div>
                 <p id="cur-date" class="text-[8px] text-gray-400 italic">--/--/-- --:--</p>
             </div>
@@ -267,20 +241,36 @@
         </div>
     </div>
 
+    <!-- พื้นที่สลิปสรุปปิดยอดขายรายวันสำหรับ Print Browser -->
+    <div id="daily-receipt-area" class="text-center">
+        <h2 class="font-bold text-lg">รายงานสรุปปิดยอดขาย</h2>
+        <p class="text-xs">ร้าน ณ COCO</p>
+        <p id="daily-print-date" class="text-xs italic mb-2"></p>
+        <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+        <div style="text-align:left; font-size:12px;">
+            <p>ยอดขายรวม: <span id="daily-print-sales" style="float:right; font-weight:bold;">0 .-</span></p>
+            <p>รายจ่ายรวม: <span id="daily-print-exps" style="float:right; font-weight:bold;">0 .-</span></p>
+            <p>กำไรสุทธิ: <span id="daily-print-net" style="float:right; font-weight:bold;">0 .-</span></p>
+        </div>
+        <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+        <div style="text-align:left; font-size:11px;">
+            <p style="font-weight:bold; margin-bottom:2px;">รายละเอียดรายจ่าย:</p>
+            <div id="daily-print-details"></div>
+        </div>
+        <div style="border-top:1px dashed #000; margin:6px 0;"></div>
+        <p style="font-size:10px;">--- สรุปยอดเรียบร้อย ---</p>
+    </div>
+
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyx0_BRxbpfWvHV329LA4DdADtithM1BhI25rIgnuZvn981UCPcJ3qLBGUe3XqEvYk1/exec';
-        let menuItems = JSON.parse(localStorage.getItem('na_coco_menu')) || [
-            { name: "มะพร้าวน้ำหอมสด", price: 50, category: "เครื่องดื่ม", img: "" },
-            { name: "กาแฟมะพร้าว", price: 65, category: "เครื่องดื่ม", img: "" },
-            { name: "วุ้นมะพร้าว", price: 35, category: "ของหวาน", img: "" }
-        ];
+        let menuItems = JSON.parse(localStorage.getItem('na_coco_menu')) || [];
         let cart = [];
         let dailyHistory = JSON.parse(localStorage.getItem('na_coco_daily_log')) || [];
         let q = parseInt(localStorage.getItem('na_coco_q')) || 1;
         let discountUnit = '฿';
         let tempLogoData = "";
+        let editingIndex = null;
         let selectedSweet = '100%';
-        let activeCartIdx = null;
         let isOrderConfirmed = false;
         let btCharacteristic = null;
 
@@ -293,12 +283,41 @@
                 document.getElementById('receipt-logo').src = savedLogo;
                 document.getElementById('admin-logo-preview').src = savedLogo;
             }
-            document.getElementById('shop-address-display').innerText = localStorage.getItem('na_coco_addr') || "ณ COCO Farm & Cafe\nโทร. 081-234-5678";
-            document.getElementById('shop-address-input').value = localStorage.getItem('na_coco_addr') || "ณ COCO Farm & Cafe\nโทร. 081-234-5678";
+            document.getElementById('shop-address-display').innerText = localStorage.getItem('na_coco_addr') || "";
+            document.getElementById('shop-address-input').value = localStorage.getItem('na_coco_addr') || "";
             document.getElementById('pp-input').value = localStorage.getItem('na_coco_pp') || "";
             document.getElementById('vat-rate-input').value = localStorage.getItem('na_coco_vat') || "0";
             renderApp(); 
             updateCart(); 
+        }
+
+        // --- ระบบ Bluetooth ---
+        async function connectBluetooth() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                btCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                document.getElementById('bt-status').classList.replace('text-gray-400', 'text-blue-600');
+                alert('เชื่อมต่อบลูทูธเรียบร้อยแล้ว!');
+            } catch (error) {
+                console.error(error);
+                alert('ไม่สามารถเชื่อมต่อบลูทูธได้: ' + error);
+            }
+        }
+
+        async function printViaBluetooth(text) {
+            if (!btCharacteristic) return;
+            try {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(text);
+                await btCharacteristic.writeValue(data);
+            } catch (e) {
+                console.error('Bluetooth Print Error:', e);
+            }
         }
 
         // --- ระบบเมนู ---
@@ -326,25 +345,6 @@
         function addToCart(name, price) { isOrderConfirmed = false; cart.push({name, price, qty: 1, sweet: '100%', note: ''}); updateCart(); }
         function changeQty(idx, delta) { isOrderConfirmed = false; cart[idx].qty += delta; if (cart[idx].qty <= 0) cart.splice(idx, 1); updateCart(); }
         function confirmOrder() { if(cart.length === 0) return; isOrderConfirmed = true; updateCart(); }
-
-        function setUnit(unit) {
-            discountUnit = unit;
-            document.getElementById('unit-baht').classList.toggle('active', unit === '฿');
-            document.getElementById('unit-percent').classList.toggle('active', unit === '%');
-            updateCart();
-        }
-
-        function calculateChange() {
-            const cash = parseFloat(document.getElementById('cash-in').value) || 0;
-            const total = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, '')) || 0;
-            const changeBox = document.getElementById('change-box');
-            if (cash >= total && total > 0) {
-                document.getElementById('change-amount').innerText = (cash - total).toLocaleString();
-                changeBox.classList.remove('hidden');
-            } else {
-                changeBox.classList.add('hidden');
-            }
-        }
 
         function updateCart() {
             const list = document.getElementById('cart-list');
@@ -381,10 +381,6 @@
                 btnPay.disabled = false;
                 btnPay.classList.replace('bg-gray-300', 'bg-green-600');
                 btnPay.classList.remove('cursor-not-allowed');
-            } else {
-                confirmSection.classList.add('hidden');
-                btnPay.disabled = true;
-                btnPay.classList.replace('bg-green-600', 'bg-gray-300');
             }
 
             const disVal = parseFloat(document.getElementById('discount-val').value) || 0;
@@ -410,16 +406,35 @@
             cart = [];
             isOrderConfirmed = false;
             document.getElementById('discount-val').value = '';
-            document.getElementById('cash-in').value = '';
             document.getElementById('receipt-note').value = '';
+            document.getElementById('cash-in').value = '';
             updateCart();
         }
 
         function resetQueue() {
-            if (confirm('ต้องการรีเซ็ตคิวเป็น #01 หรือไม่?')) {
+            if(confirm('ต้องการรีเซ็ตคิวกลับเป็น #01 ใช่หรือไม่?')) {
                 q = 1;
                 localStorage.setItem('na_coco_q', q);
                 renderApp();
+            }
+        }
+
+        function setUnit(u) {
+            discountUnit = u;
+            document.getElementById('unit-baht').classList.toggle('active', u === '฿');
+            document.getElementById('unit-percent').classList.toggle('active', u === '%');
+            updateCart();
+        }
+
+        function calculateChange() {
+            const cash = parseFloat(document.getElementById('cash-in').value) || 0;
+            const total = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, '')) || 0;
+            const box = document.getElementById('change-box');
+            if (cash >= total && total > 0) {
+                document.getElementById('change-amount').innerText = (cash - total).toLocaleString();
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
             }
         }
 
@@ -434,26 +449,25 @@
             }
         }
 
-        // --- Modifier Modal ---
+        // --- ระบบ Modifier ---
         function openModifier(idx) {
-            activeCartIdx = idx;
-            selectedSweet = cart[idx].sweet || '100%';
-            setSweet(selectedSweet);
+            editingIndex = idx;
             document.getElementById('mod-note').value = cart[idx].note || '';
+            setSweet(cart[idx].sweet || '100%');
             document.getElementById('modifier-modal').style.display = 'flex';
         }
 
         function setSweet(val) {
             selectedSweet = val;
-            document.querySelectorAll('.sweet-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-val') === val);
+            document.querySelectorAll('.sweet-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.val === val);
             });
         }
 
         function saveModifier() {
-            if (activeCartIdx !== null && cart[activeCartIdx]) {
-                cart[activeCartIdx].sweet = selectedSweet;
-                cart[activeCartIdx].note = document.getElementById('mod-note').value;
+            if (editingIndex !== null) {
+                cart[editingIndex].sweet = selectedSweet;
+                cart[editingIndex].note = document.getElementById('mod-note').value;
                 updateCart();
             }
             document.getElementById('modifier-modal').style.display = 'none';
@@ -546,86 +560,6 @@
             document.getElementById('hist-net').innerText = (sales - exps).toLocaleString();
         }
 
-        // --- พิมพ์สรุปยอดขายรายวัน ---
-        async function printDailyClose() {
-            if (dailyHistory.length === 0) {
-                alert('ยังไม่มีข้อมูลการขายสำหรับพิมพ์วันนี้');
-                return;
-            }
-
-            let sales = 0;
-            let exps = 0;
-            let salesCount = 0;
-            let expDetails = [];
-
-            dailyHistory.forEach(i => {
-                if (i.type === 'SALE') {
-                    sales += i.amount;
-                    salesCount++;
-                } else if (i.type === 'EXPENSE') {
-                    exps += i.amount;
-                    expDetails.push(`${i.note}: -${i.amount.toLocaleString()}`);
-                }
-            });
-
-            const netTotal = sales - exps;
-            const dateStr = new Date().toLocaleDateString('th-TH');
-            const timeStr = new Date().toLocaleTimeString('th-TH');
-
-            // 1. พิมพ์ผ่าน Bluetooth หากมีการเชื่อมต่ออยู่
-            if (btCharacteristic) {
-                let txt = `   SUMMARY REPORT\n`;
-                txt += `  สรุปยอดขายประจำวัน\n`;
-                txt += `วันที่: ${dateStr} ${timeStr}\n`;
-                txt += `--------------------------\n`;
-                txt += `จำนวนออเดอร์:    ${salesCount} รายการ\n`;
-                txt += `ยอดขายรวม:      ${sales.toLocaleString()} .-\n`;
-                txt += `รายจ่ายรวม:      -${exps.toLocaleString()} .-\n`;
-                if (expDetails.length > 0) {
-                    txt += `[ รายละเอียดรายจ่าย ]\n`;
-                    expDetails.forEach(d => { txt += ` ${d}\n`; });
-                }
-                txt += `--------------------------\n`;
-                txt += `ยอดเงินสุทธิ:    ${netTotal.toLocaleString()} .-\n`;
-                txt += `\n\n\n\n\n`;
-                await printViaBluetooth(txt);
-            }
-
-            // 2. พิมพ์ผ่าน Web/Thermal Printer Display Area
-            const originalCart = [...cart];
-            const originalHeader = document.getElementById('receipt-header-title').innerText;
-            const originalQ = document.getElementById('receipt-q').innerText;
-
-            document.getElementById('receipt-header-title').innerText = "DAILY SUMMARY REPORT";
-            document.getElementById('receipt-q').innerText = "SUMMARY";
-            document.getElementById('cur-date').innerText = `${dateStr} ${timeStr}`;
-
-            const cartList = document.getElementById('cart-list');
-            cartList.innerHTML = `
-                <div class="bg-white p-3 rounded-xl border space-y-2 text-xs">
-                    <div class="flex justify-between border-b pb-1 font-bold"><span>จำนวนออเดอร์</span><span>${salesCount} รายการ</span></div>
-                    <div class="flex justify-between text-green-700 font-bold"><span>ยอดขายรวม</span><span>${sales.toLocaleString()}.-</span></div>
-                    <div class="flex justify-between text-red-600 font-bold"><span>รายจ่ายรวม</span><span>-${exps.toLocaleString()}.-</span></div>
-                    ${expDetails.length > 0 ? `<div class="text-[10px] text-gray-500 pt-1 border-t"><b>รายการจ่าย:</b><br>${expDetails.join('<br>')}</div>` : ''}
-                </div>
-            `;
-
-            document.getElementById('sub-total').innerText = sales.toLocaleString();
-            document.getElementById('row-discount').style.display = 'none';
-            document.getElementById('row-vat').style.display = 'none';
-            document.getElementById('total-price').innerText = netTotal.toLocaleString();
-
-            window.print();
-
-            // คืนค่าการแสดงผลเดิม
-            setTimeout(() => {
-                document.getElementById('receipt-header-title').innerText = originalHeader;
-                document.getElementById('receipt-q').innerText = originalQ;
-                cart = originalCart;
-                updateCart();
-            }, 500);
-        }
-
         // --- ฟังก์ชันชำระเงิน ---
         async function handleCheckout() {
             if (cart.length === 0 || !isOrderConfirmed) return;
@@ -653,6 +587,7 @@
             }
 
             document.getElementById('cur-date').innerText = timeStr;
+            document.body.className = "print-order";
             window.print();
 
             dailyHistory.push({ 
@@ -694,108 +629,112 @@
             }, 1000);
         }
 
+        // --- ฟังก์ชันปิดยอดรายวัน ---
         async function sendDailyClose() {
-            if (!confirm('ยืนยันปิดยอดและล้างคิวรายวัน?')) return;
+            if (!confirm('ยืนยันปิดยอดขายและสั่งพิมพ์สลิปสรุปรายวัน?')) return;
 
             let sales = 0;
             let exps = 0;
             let expDetails = [];
+            const timeStr = new Date().toLocaleString('th-TH');
 
             dailyHistory.forEach(i => {
                 if (i.type === 'SALE') {
                     sales += i.amount;
                 } else if (i.type === 'EXPENSE') {
                     exps += i.amount;
-                    expDetails.push(`${i.note}(${i.amount})`);
+                    expDetails.push(`${i.note} (${i.amount.toLocaleString()}.-)`);
                 }
             });
 
-            // พิมพ์สลิปปิดยอดก่อนล้างข้อมูล
-            await printDailyClose();
+            const net = sales - exps;
 
-            try {
-                fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({
-                        action: 'DAILY_CLOSE',
-                        timestamp: new Date().toLocaleString('th-TH'),
-                        total_sales: sales,
-                        total_expenses: exps,
-                        net_total: sales - exps,
-                        expense_details: expDetails.join(', ')
-                    })
-                });
-            } catch (e) {
-                console.error("Daily Close Error:", e);
+            // ส่งข้อมูลออก Bluetooth (ถ้ามี)
+            if (btCharacteristic) {
+                let txt = `==========================\n`;
+                txt += `    รายงานสรุปปิดยอดขาย\n`;
+                txt += `       ร้าน ณ COCO\n`;
+                txt += `==========================\n`;
+                txt += `เวลาปิดยอด: ${timeStr}\n`;
+                txt += `--------------------------\n`;
+                txt += `ยอดขายรวม:   ${sales.toLocaleString()} .-\n`;
+                txt += `รายจ่ายรวม:   ${exps.toLocaleString()} .-\n`;
+                txt += `กำไรสุทธิ:    ${net.toLocaleString()} .-\n`;
+                txt += `--------------------------\n`;
+                txt += `รายการจ่าย:\n`;
+                if(expDetails.length > 0) {
+                    expDetails.forEach(d => { txt += `- ${d}\n`; });
+                } else {
+                    txt += `- ไม่มีรายการจ่าย\n`;
+                }
+                txt += `==========================\n\n\n\n\n`;
+                await printViaBluetooth(txt);
             }
 
-            dailyHistory = [];
-            localStorage.removeItem('na_coco_daily_log');
-            q = 1;
-            localStorage.setItem('na_coco_q', q);
-            renderHistory();
-            renderApp();
-            closeHistory();
-            alert('ปิดยอดขายประจำวันและส่งข้อมูลเรียบร้อยแล้ว!');
-        }
-
-        // --- Bluetooth Printing Helpers ---
-        async function connectBluetooth() {
-            try {
-                const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
-                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
-                });
-                const server = await device.gatt.connect();
-                const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-                const characteristics = await service.getCharacteristics();
-                btCharacteristic = characteristics[0];
-                document.getElementById('bt-status').classList.replace('text-gray-400', 'text-blue-500');
-                alert('เชื่อมต่อเครื่องพิมพ์ Bluetooth สำเร็จ');
-            } catch (e) {
-                console.error("Bluetooth Error:", e);
-                alert('ไม่สามารถเชื่อมต่อ Bluetooth ได้');
+            // เตรียมข้อมูลใส่ใน DOM สำหรับพิมพ์ผ่าน Browser Print
+            document.getElementById('daily-print-date').innerText = timeStr;
+            document.getElementById('daily-print-sales').innerText = sales.toLocaleString() + ' .-';
+            document.getElementById('daily-print-exps').innerText = exps.toLocaleString() + ' .-';
+            document.getElementById('daily-print-net').innerText = net.toLocaleString() + ' .-';
+            
+            const printExpDetails = document.getElementById('daily-print-details');
+            if(expDetails.length > 0) {
+                printExpDetails.innerHTML = expDetails.map(d => `<p style="margin:2px 0;">• ${d}</p>`).join('');
+            } else {
+                printExpDetails.innerHTML = `<p style="margin:2px 0;">- ไม่มี -</p>`;
             }
+
+            document.body.className = "print-daily";
+            window.print();
+
+            // ล้างข้อมูลรายวันและคิว
+            setTimeout(() => {
+                dailyHistory = [];
+                localStorage.setItem('na_coco_daily_log', JSON.stringify([]));
+                q = 1;
+                localStorage.setItem('na_coco_q', q);
+                closeHistory();
+                renderApp();
+                alert('ส่งปิดยอดและรีเซ็ตระบบเรียบร้อยแล้ว!');
+            }, 1000);
         }
 
-        async function printViaBluetooth(text) {
-            if (!btCharacteristic) return;
-            const encoder = new TextEncoder();
-            const data = encoder.encode(text);
-            await btCharacteristic.writeValue(data);
-        }
-
-        // --- Admin Functions ---
+        // --- ระบบผู้ดูแลระบบ (Admin) ---
         function openAdmin() { document.getElementById('admin-modal').style.display = 'flex'; renderAdminMenu(); }
         function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
+
+        function processImage(input, type) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (type === 'logo') {
+                        tempLogoData = e.target.result;
+                        document.getElementById('admin-logo-preview').src = tempLogoData;
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
         function renderAdminMenu() {
             const list = document.getElementById('admin-menu-list');
             list.innerHTML = menuItems.map((item, idx) => `
-                <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-xl border">
-                    <input type="text" value="${item.name}" onchange="menuItems[${idx}].name=this.value" class="flex-grow p-2 bg-white rounded-lg border text-xs">
-                    <input type="number" value="${item.price}" onchange="menuItems[${idx}].price=parseFloat(this.value)" class="w-16 p-2 bg-white rounded-lg border text-xs font-bold">
-                    <input type="text" value="${item.category || 'ทั่วไป'}" onchange="menuItems[${idx}].category=this.value" class="w-20 p-2 bg-white rounded-lg border text-xs">
-                    <button onclick="menuItems.splice(${idx},1); renderAdminMenu();" class="text-red-400 px-1"><i class="fas fa-trash"></i></button>
+                <div class="bg-gray-50 p-3 rounded-xl border space-y-2">
+                    <div class="flex gap-2">
+                        <input type="text" value="${item.name}" onchange="menuItems[${idx}].name=this.value" class="flex-grow p-2 border rounded-lg text-xs" placeholder="ชื่อเมนู">
+                        <input type="number" value="${item.price}" onchange="menuItems[${idx}].price=parseFloat(this.value)" class="w-20 p-2 border rounded-lg text-xs" placeholder="ราคา">
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <input type="text" value="${item.category || ''}" onchange="menuItems[${idx}].category=this.value" class="flex-grow p-2 border rounded-lg text-xs" placeholder="หมวดหมู่">
+                        <button onclick="menuItems.splice(${idx},1); renderAdminMenu();" class="text-red-500 p-2 text-xs"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
             `).join('');
         }
 
         function addNewMenuItem() {
-            menuItems.push({ name: "เมนูใหม่", price: 0, category: "ทั่วไป", img: "" });
+            menuItems.push({ name: 'เมนูใหม่', price: 0, category: 'ทั่วไป', img: '' });
             renderAdminMenu();
-        }
-
-        function processImage(input, target) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    tempLogoData = e.target.result;
-                    document.getElementById('admin-logo-preview').src = tempLogoData;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
         }
 
         function saveSettings() {
@@ -804,18 +743,14 @@
                 document.getElementById('main-logo').src = tempLogoData;
                 document.getElementById('receipt-logo').src = tempLogoData;
             }
-            const addr = document.getElementById('shop-address-input').value;
-            const pp = document.getElementById('pp-input').value;
-            const vat = document.getElementById('vat-rate-input').value;
-
-            localStorage.setItem('na_coco_addr', addr);
-            localStorage.setItem('na_coco_pp', pp);
-            localStorage.setItem('na_coco_vat', vat);
+            localStorage.setItem('na_coco_addr', document.getElementById('shop-address-input').value);
+            localStorage.setItem('na_coco_pp', document.getElementById('pp-input').value);
+            localStorage.setItem('na_coco_vat', document.getElementById('vat-rate-input').value);
             localStorage.setItem('na_coco_menu', JSON.stringify(menuItems));
-
-            document.getElementById('shop-address-display').innerText = addr;
-            renderApp();
+            
+            document.getElementById('shop-address-display').innerText = document.getElementById('shop-address-input').value;
             closeAdmin();
+            renderApp();
             alert('บันทึกการตั้งค่าเรียบร้อยแล้ว');
         }
     </script>
