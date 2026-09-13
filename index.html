@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Na COCO POS 🌴</title>
+    <title>POS System 🌴</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -166,7 +166,7 @@
                     <button type="button" onclick="document.getElementById('logo-file').click();" class="text-xs font-bold text-blue-600 underline">เปลี่ยนโลโก้ร้าน</button>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2"><label class="text-[10px] font-bold text-gray-400 uppercase">ชื่อ/ที่อยู่ร้าน</label><textarea id="shop-address-input" class="w-full p-3 bg-gray-50 rounded-xl border text-xs h-16"></textarea></div>
+                    <div class="col-span-2"><label class="text-[10px] font-bold text-gray-400 uppercase">ชื่อ/ที่อยู่ร้าน</label><textarea id="shop-address-input" class="w-full p-3 bg-gray-50 rounded-xl border text-xs h-16" placeholder="พิมพ์ชื่อหรือที่อยู่ร้านที่นี่..."></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase">PromptPay</label><input type="text" id="pp-input" class="w-full p-3 bg-gray-50 rounded-xl border font-bold text-green-700"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase">VAT (%)</label><input type="number" id="vat-rate-input" class="w-full p-3 bg-gray-50 rounded-xl border font-bold text-blue-700"></div>
                 </div>
@@ -183,7 +183,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <img id="main-logo" src="https://i.ibb.co/LzfNqfX/image-1aad44.png" class="w-16 h-16 object-contain rounded-xl bg-white p-1 shadow-sm">
-                    <div><h1 class="text-xl font-black text-green-900 leading-none uppercase">ณ COCO</h1><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Integrated Farm System</p></div>
+                    <div><h1 id="main-shop-title" class="text-xl font-black text-green-900 leading-none uppercase">POS System</h1><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Integrated Farm System</p></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openHistory()" class="p-3 bg-white border rounded-full text-blue-400 shadow-sm"><i class="fas fa-history"></i></button>
@@ -244,7 +244,7 @@
     <!-- พื้นที่สลิปสรุปปิดยอดขายรายวันสำหรับ Print Browser -->
     <div id="daily-receipt-area" class="text-center">
         <h2 class="font-bold text-lg">รายงานสรุปปิดยอดขาย</h2>
-        <p class="text-xs">ร้าน Na COCO</p>
+        <p id="daily-print-shopname" class="text-xs"></p>
         <p id="daily-print-date" class="text-xs italic mb-2"></p>
         <div style="border-top:1px dashed #000; margin:4px 0;"></div>
         <div style="text-align:left; font-size:12px;">
@@ -262,8 +262,7 @@
     </div>
 
     <script>
-        // ⚠️ วาง Web App URL ที่ได้จาก Google Apps Script ใหม่ตรงนี้ครับ
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxcNHDfPB_UB_RDww3Z4RMIsxRa0_TlS5yyZkmHig7wfXdv-MvTIqCKpTowBJS0EAx5/exec';
+        const scriptURL = 'https://script.google.com/macros/s/YOUR_NEW_SCRIPT_ID_HERE/exec';
         
         let menuItems = JSON.parse(localStorage.getItem('na_coco_menu')) || [];
         let cart = [];
@@ -285,15 +284,27 @@
                 document.getElementById('receipt-logo').src = savedLogo;
                 document.getElementById('admin-logo-preview').src = savedLogo;
             }
-            document.getElementById('shop-address-display').innerText = localStorage.getItem('na_coco_addr') || "";
-            document.getElementById('shop-address-input').value = localStorage.getItem('na_coco_addr') || "";
+            
+            const savedAddr = localStorage.getItem('na_coco_addr') || "";
+            document.getElementById('shop-address-display').innerText = savedAddr;
+            document.getElementById('shop-address-input').value = savedAddr;
+            
+            // ดึงบรรทัดแรกมาแสดงเป็นชื่อร้านหลัก (ถ้ามีบันทึกไว้)
+            if(savedAddr.trim() !== "") {
+                const firstLine = savedAddr.split('\n')[0];
+                document.getElementById('main-shop-title').innerText = firstLine;
+                document.getElementById('daily-print-shopname').innerText = firstLine;
+            } else {
+                document.getElementById('main-shop-title').innerText = "POS System";
+                document.getElementById('daily-print-shopname').innerText = "";
+            }
+
             document.getElementById('pp-input').value = localStorage.getItem('na_coco_pp') || "";
             document.getElementById('vat-rate-input').value = localStorage.getItem('na_coco_vat') || "0";
             renderApp(); 
             updateCart(); 
         }
 
-        // --- ระบบ Bluetooth ---
         async function connectBluetooth() {
             try {
                 const device = await navigator.bluetooth.requestDevice({
@@ -322,7 +333,6 @@
             }
         }
 
-        // --- ระบบเมนู ---
         function renderApp() {
             document.getElementById('next-q').innerText = '#' + q.toString().padStart(2, '0');
             document.getElementById('receipt-q').innerText = '#' + q.toString().padStart(2, '0');
@@ -338,7 +348,7 @@
                     const card = document.createElement('div');
                     card.className = "menu-card shadow-sm";
                     card.onclick = () => addToCart(item.name, item.price);
-                    card.innerHTML = `<img src="${item.img || 'https://via.placeholder.com/200x150?text=Na+COCO'}" class="menu-img-display"><div class="p-3 text-center"><span class="font-bold text-[10px] text-gray-500 block truncate uppercase">${item.name}</span><span class="text-green-600 font-black">${item.price}.-</span></div>`;
+                    card.innerHTML = `<img src="${item.img || 'https://via.placeholder.com/200x150?text=Menu'}" class="menu-img-display"><div class="p-3 text-center"><span class="font-bold text-[10px] text-gray-500 block truncate uppercase">${item.name}</span><span class="text-green-600 font-black">${item.price}.-</span></div>`;
                     menuDiv.appendChild(card);
                 });
             });
@@ -451,7 +461,6 @@
             }
         }
 
-        // --- ระบบ Modifier ---
         function openModifier(idx) {
             editingIndex = idx;
             document.getElementById('mod-note').value = cart[idx].note || '';
@@ -475,7 +484,6 @@
             document.getElementById('modifier-modal').style.display = 'none';
         }
 
-        // --- ระบบประวัติและรายจ่าย ---
         function openHistory() { document.getElementById('history-modal').style.display = 'flex'; renderHistory(); }
         function closeHistory() { document.getElementById('history-modal').style.display = 'none'; }
 
@@ -562,7 +570,6 @@
             document.getElementById('hist-net').innerText = (sales - exps).toLocaleString();
         }
 
-        // --- ฟังก์ชันชำระเงิน (ส่งเข้า Sheet 'Sales') ---
         async function handleCheckout() {
             if (cart.length === 0 || !isOrderConfirmed) return;
 
@@ -571,9 +578,10 @@
             const vatAmount = parseFloat(document.getElementById('txt-vat-amount').innerText.replace(/,/g, ''));
             const queueNo = document.getElementById('receipt-q').innerText;
             const note = document.getElementById('receipt-note').value;
+            const shopTitle = document.getElementById('main-shop-title').innerText;
 
             if (btCharacteristic) {
-                let txt = `    Na Coco\n`;
+                let txt = `   ${shopTitle}\n`;
                 txt += `คิว: ${queueNo}\n`;
                 txt += `เวลา: ${timeStr}\n`;
                 txt += `--------------------------\n`;
@@ -632,7 +640,6 @@
             }, 1000);
         }
 
-        // --- ฟังก์ชันปิดยอดรายวัน (ส่งเข้า Sheet 'DailyReports' ตรงช่อง A B C D E) ---
         async function sendDailyClose() {
             if (!confirm('ยืนยันปิดยอดขายและส่งข้อมูลเข้า Google Sheet?')) return;
 
@@ -640,6 +647,7 @@
             let exps = 0;
             let expDetails = [];
             const timeStr = new Date().toLocaleString('th-TH');
+            const shopTitle = document.getElementById('main-shop-title').innerText;
             
             const today = new Date();
             const dateStr = today.getDate() + "/" + (today.getMonth() + 1) + "/" + (today.getFullYear() + 543);
@@ -656,7 +664,6 @@
             const net = sales - exps;
             const expText = expDetails.length > 0 ? expDetails.join(', ') : '';
 
-            // 1. ส่งข้อมูลเข้า Sheet 'DailyReports'
             try {
                 fetch(scriptURL, {
                     method: 'POST',
@@ -674,11 +681,10 @@
                 console.error("Sheet Daily Close Error:", e);
             }
 
-            // 2. พิมพ์ Bluetooth
             if (btCharacteristic) {
                 let txt = `==========================\n`;
                 txt += `    รายงานสรุปปิดยอดขาย\n`;
-                txt += `       ร้าน ณ COCO\n`;
+                txt += `        ${shopTitle}\n`;
                 txt += `==========================\n`;
                 txt += `เวลาปิดยอด: ${timeStr}\n`;
                 txt += `--------------------------\n`;
@@ -696,8 +702,8 @@
                 await printViaBluetooth(txt);
             }
 
-            // 3. พิมพ์ผ่าน Browser
             document.getElementById('daily-print-date').innerText = timeStr;
+            document.getElementById('daily-print-shopname').innerText = shopTitle;
             document.getElementById('daily-print-sales').innerText = sales.toLocaleString() + ' .-';
             document.getElementById('daily-print-exps').innerText = exps.toLocaleString() + ' .-';
             document.getElementById('daily-print-net').innerText = net.toLocaleString() + ' .-';
@@ -712,7 +718,6 @@
             document.body.className = "print-daily";
             window.print();
 
-            // 4. ล้างค่าสำหรับวันถัดไป
             setTimeout(() => {
                 dailyHistory = [];
                 localStorage.setItem('na_coco_daily_log', JSON.stringify([]));
@@ -724,7 +729,6 @@
             }, 1000);
         }
 
-        // --- ระบบผู้ดูแลระบบ (Admin) ---
         function openAdmin() { document.getElementById('admin-modal').style.display = 'flex'; renderAdminMenu(); }
         function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
 
@@ -768,12 +772,23 @@
                 document.getElementById('main-logo').src = tempLogoData;
                 document.getElementById('receipt-logo').src = tempLogoData;
             }
-            localStorage.setItem('na_coco_addr', document.getElementById('shop-address-input').value);
+            const addrVal = document.getElementById('shop-address-input').value;
+            localStorage.setItem('na_coco_addr', addrVal);
             localStorage.setItem('na_coco_pp', document.getElementById('pp-input').value);
             localStorage.setItem('na_coco_vat', document.getElementById('vat-rate-input').value);
             localStorage.setItem('na_coco_menu', JSON.stringify(menuItems));
             
-            document.getElementById('shop-address-display').innerText = document.getElementById('shop-address-input').value;
+            document.getElementById('shop-address-display').innerText = addrVal;
+            
+            if(addrVal.trim() !== "") {
+                const firstLine = addrVal.split('\n')[0];
+                document.getElementById('main-shop-title').innerText = firstLine;
+                document.getElementById('daily-print-shopname').innerText = firstLine;
+            } else {
+                document.getElementById('main-shop-title').innerText = "POS System";
+                document.getElementById('daily-print-shopname').innerText = "";
+            }
+
             closeAdmin();
             renderApp();
             alert('บันทึกการตั้งค่าเรียบร้อยแล้ว');
