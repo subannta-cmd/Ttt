@@ -132,7 +132,7 @@
             <div class="grid grid-cols-3 gap-3 mb-6">
                 <div onclick="setSweet('0%')" class="sweet-btn" data-val="0%">0%</div>
                 <div onclick="setSweet('50%')" class="sweet-btn" data-val="50%">50%</div>
-                <div onclick="setSweet('100%')" class="sweet-btn" data-val="100%">100%</div>
+                <div onclick="setSweet('100%')" class="sweet-btn active" data-val="100%">100%</div>
             </div>
             <div class="mb-6">
                 <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block">หมายเหตุเพิ่มเติม</label>
@@ -168,8 +168,9 @@
                     <div id="daily-log-list" class="space-y-2 text-[11px]"></div>
                 </div>
             </div>
-            <div class="pt-4 mt-2 border-t">
-                <button onclick="sendDailyClose()" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-bold shadow-lg">ส่งปิดยอดรายวัน</button>
+            <div class="pt-4 mt-2 border-t flex gap-2">
+                <button onclick="printDailyClose()" class="w-1/3 bg-gray-700 text-white py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2"><i class="fas fa-print"></i> พิมพ์ยอด</button>
+                <button onclick="sendDailyClose()" class="w-2/3 bg-orange-500 text-white py-4 rounded-2xl font-bold shadow-lg">ส่งปิดยอดรายวัน</button>
             </div>
         </div>
     </div>
@@ -224,7 +225,7 @@
             <div class="p-4 text-center border-b border-dashed">
                 <img id="receipt-logo" src="https://i.ibb.co/LzfNqfX/image-1aad44.png" class="w-12 h-12 object-contain mx-auto mb-2">
                 <div id="shop-address-display" class="text-[9px] text-gray-500 mb-2 whitespace-pre-line leading-tight"></div>
-                <h2 class="font-black text-green-800 text-[9px] uppercase">RECEIPT / ใบเสร็จ</h2>
+                <h2 id="receipt-header-title" class="font-black text-green-800 text-[9px] uppercase">RECEIPT / ใบเสร็จ</h2>
                 <div id="receipt-q" class="text-4xl font-black text-green-900 my-1">#01</div>
                 <p id="cur-date" class="text-[8px] text-gray-400 italic">--/--/-- --:--</p>
             </div>
@@ -268,14 +269,18 @@
 
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyx0_BRxbpfWvHV329LA4DdADtithM1BhI25rIgnuZvn981UCPcJ3qLBGUe3XqEvYk1/exec';
-        let menuItems = JSON.parse(localStorage.getItem('na_coco_menu')) || [];
+        let menuItems = JSON.parse(localStorage.getItem('na_coco_menu')) || [
+            { name: "มะพร้าวน้ำหอมสด", price: 50, category: "เครื่องดื่ม", img: "" },
+            { name: "กาแฟมะพร้าว", price: 65, category: "เครื่องดื่ม", img: "" },
+            { name: "วุ้นมะพร้าว", price: 35, category: "ของหวาน", img: "" }
+        ];
         let cart = [];
         let dailyHistory = JSON.parse(localStorage.getItem('na_coco_daily_log')) || [];
         let q = parseInt(localStorage.getItem('na_coco_q')) || 1;
         let discountUnit = '฿';
         let tempLogoData = "";
-        let editingIndex = null;
         let selectedSweet = '100%';
+        let activeCartIdx = null;
         let isOrderConfirmed = false;
         let btCharacteristic = null;
 
@@ -288,8 +293,8 @@
                 document.getElementById('receipt-logo').src = savedLogo;
                 document.getElementById('admin-logo-preview').src = savedLogo;
             }
-            document.getElementById('shop-address-display').innerText = localStorage.getItem('na_coco_addr') || "";
-            document.getElementById('shop-address-input').value = localStorage.getItem('na_coco_addr') || "";
+            document.getElementById('shop-address-display').innerText = localStorage.getItem('na_coco_addr') || "ณ COCO Farm & Cafe\nโทร. 081-234-5678";
+            document.getElementById('shop-address-input').value = localStorage.getItem('na_coco_addr') || "ณ COCO Farm & Cafe\nโทร. 081-234-5678";
             document.getElementById('pp-input').value = localStorage.getItem('na_coco_pp') || "";
             document.getElementById('vat-rate-input').value = localStorage.getItem('na_coco_vat') || "0";
             renderApp(); 
@@ -321,6 +326,25 @@
         function addToCart(name, price) { isOrderConfirmed = false; cart.push({name, price, qty: 1, sweet: '100%', note: ''}); updateCart(); }
         function changeQty(idx, delta) { isOrderConfirmed = false; cart[idx].qty += delta; if (cart[idx].qty <= 0) cart.splice(idx, 1); updateCart(); }
         function confirmOrder() { if(cart.length === 0) return; isOrderConfirmed = true; updateCart(); }
+
+        function setUnit(unit) {
+            discountUnit = unit;
+            document.getElementById('unit-baht').classList.toggle('active', unit === '฿');
+            document.getElementById('unit-percent').classList.toggle('active', unit === '%');
+            updateCart();
+        }
+
+        function calculateChange() {
+            const cash = parseFloat(document.getElementById('cash-in').value) || 0;
+            const total = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, '')) || 0;
+            const changeBox = document.getElementById('change-box');
+            if (cash >= total && total > 0) {
+                document.getElementById('change-amount').innerText = (cash - total).toLocaleString();
+                changeBox.classList.remove('hidden');
+            } else {
+                changeBox.classList.add('hidden');
+            }
+        }
 
         function updateCart() {
             const list = document.getElementById('cart-list');
@@ -357,6 +381,10 @@
                 btnPay.disabled = false;
                 btnPay.classList.replace('bg-gray-300', 'bg-green-600');
                 btnPay.classList.remove('cursor-not-allowed');
+            } else {
+                confirmSection.classList.add('hidden');
+                btnPay.disabled = true;
+                btnPay.classList.replace('bg-green-600', 'bg-gray-300');
             }
 
             const disVal = parseFloat(document.getElementById('discount-val').value) || 0;
@@ -376,6 +404,59 @@
             document.getElementById('total-price').innerText = Math.round(finalTotal).toLocaleString();
             
             updateQR(finalTotal); calculateChange();
+        }
+
+        function clearCart() {
+            cart = [];
+            isOrderConfirmed = false;
+            document.getElementById('discount-val').value = '';
+            document.getElementById('cash-in').value = '';
+            document.getElementById('receipt-note').value = '';
+            updateCart();
+        }
+
+        function resetQueue() {
+            if (confirm('ต้องการรีเซ็ตคิวเป็น #01 หรือไม่?')) {
+                q = 1;
+                localStorage.setItem('na_coco_q', q);
+                renderApp();
+            }
+        }
+
+        function updateQR(amount) {
+            const pp = localStorage.getItem('na_coco_pp');
+            const qrArea = document.getElementById('qr-area');
+            if (pp && amount > 0) {
+                document.getElementById('qr-img').src = `https://promptpay.io/${pp}/${amount}.png`;
+                qrArea.classList.remove('hidden');
+            } else {
+                qrArea.classList.add('hidden');
+            }
+        }
+
+        // --- Modifier Modal ---
+        function openModifier(idx) {
+            activeCartIdx = idx;
+            selectedSweet = cart[idx].sweet || '100%';
+            setSweet(selectedSweet);
+            document.getElementById('mod-note').value = cart[idx].note || '';
+            document.getElementById('modifier-modal').style.display = 'flex';
+        }
+
+        function setSweet(val) {
+            selectedSweet = val;
+            document.querySelectorAll('.sweet-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-val') === val);
+            });
+        }
+
+        function saveModifier() {
+            if (activeCartIdx !== null && cart[activeCartIdx]) {
+                cart[activeCartIdx].sweet = selectedSweet;
+                cart[activeCartIdx].note = document.getElementById('mod-note').value;
+                updateCart();
+            }
+            document.getElementById('modifier-modal').style.display = 'none';
         }
 
         // --- ระบบประวัติและรายจ่าย ---
@@ -465,6 +546,86 @@
             document.getElementById('hist-net').innerText = (sales - exps).toLocaleString();
         }
 
+        // --- พิมพ์สรุปยอดขายรายวัน ---
+        async function printDailyClose() {
+            if (dailyHistory.length === 0) {
+                alert('ยังไม่มีข้อมูลการขายสำหรับพิมพ์วันนี้');
+                return;
+            }
+
+            let sales = 0;
+            let exps = 0;
+            let salesCount = 0;
+            let expDetails = [];
+
+            dailyHistory.forEach(i => {
+                if (i.type === 'SALE') {
+                    sales += i.amount;
+                    salesCount++;
+                } else if (i.type === 'EXPENSE') {
+                    exps += i.amount;
+                    expDetails.push(`${i.note}: -${i.amount.toLocaleString()}`);
+                }
+            });
+
+            const netTotal = sales - exps;
+            const dateStr = new Date().toLocaleDateString('th-TH');
+            const timeStr = new Date().toLocaleTimeString('th-TH');
+
+            // 1. พิมพ์ผ่าน Bluetooth หากมีการเชื่อมต่ออยู่
+            if (btCharacteristic) {
+                let txt = `   SUMMARY REPORT\n`;
+                txt += `  สรุปยอดขายประจำวัน\n`;
+                txt += `วันที่: ${dateStr} ${timeStr}\n`;
+                txt += `--------------------------\n`;
+                txt += `จำนวนออเดอร์:    ${salesCount} รายการ\n`;
+                txt += `ยอดขายรวม:      ${sales.toLocaleString()} .-\n`;
+                txt += `รายจ่ายรวม:      -${exps.toLocaleString()} .-\n`;
+                if (expDetails.length > 0) {
+                    txt += `[ รายละเอียดรายจ่าย ]\n`;
+                    expDetails.forEach(d => { txt += ` ${d}\n`; });
+                }
+                txt += `--------------------------\n`;
+                txt += `ยอดเงินสุทธิ:    ${netTotal.toLocaleString()} .-\n`;
+                txt += `\n\n\n\n\n`;
+                await printViaBluetooth(txt);
+            }
+
+            // 2. พิมพ์ผ่าน Web/Thermal Printer Display Area
+            const originalCart = [...cart];
+            const originalHeader = document.getElementById('receipt-header-title').innerText;
+            const originalQ = document.getElementById('receipt-q').innerText;
+
+            document.getElementById('receipt-header-title').innerText = "DAILY SUMMARY REPORT";
+            document.getElementById('receipt-q').innerText = "SUMMARY";
+            document.getElementById('cur-date').innerText = `${dateStr} ${timeStr}`;
+
+            const cartList = document.getElementById('cart-list');
+            cartList.innerHTML = `
+                <div class="bg-white p-3 rounded-xl border space-y-2 text-xs">
+                    <div class="flex justify-between border-b pb-1 font-bold"><span>จำนวนออเดอร์</span><span>${salesCount} รายการ</span></div>
+                    <div class="flex justify-between text-green-700 font-bold"><span>ยอดขายรวม</span><span>${sales.toLocaleString()}.-</span></div>
+                    <div class="flex justify-between text-red-600 font-bold"><span>รายจ่ายรวม</span><span>-${exps.toLocaleString()}.-</span></div>
+                    ${expDetails.length > 0 ? `<div class="text-[10px] text-gray-500 pt-1 border-t"><b>รายการจ่าย:</b><br>${expDetails.join('<br>')}</div>` : ''}
+                </div>
+            `;
+
+            document.getElementById('sub-total').innerText = sales.toLocaleString();
+            document.getElementById('row-discount').style.display = 'none';
+            document.getElementById('row-vat').style.display = 'none';
+            document.getElementById('total-price').innerText = netTotal.toLocaleString();
+
+            window.print();
+
+            // คืนค่าการแสดงผลเดิม
+            setTimeout(() => {
+                document.getElementById('receipt-header-title').innerText = originalHeader;
+                document.getElementById('receipt-q').innerText = originalQ;
+                cart = originalCart;
+                updateCart();
+            }, 500);
+        }
+
         // --- ฟังก์ชันชำระเงิน ---
         async function handleCheckout() {
             if (cart.length === 0 || !isOrderConfirmed) return;
@@ -549,49 +710,52 @@
                 }
             });
 
-            const reportData = {
-                type: "DAILY_REPORT",
-                date: new Date().toLocaleDateString('th-TH'),
-                totalSales: sales,
-                totalExpense: exps,
-                netAmount: sales - exps,
-                expenseNote: expDetails.join(', ')
-            };
+            // พิมพ์สลิปปิดยอดก่อนล้างข้อมูล
+            await printDailyClose();
 
             try {
-                await fetch(scriptURL, {
+                fetch(scriptURL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify(reportData)
+                    body: JSON.stringify({
+                        action: 'DAILY_CLOSE',
+                        timestamp: new Date().toLocaleString('th-TH'),
+                        total_sales: sales,
+                        total_expenses: exps,
+                        net_total: sales - exps,
+                        expense_details: expDetails.join(', ')
+                    })
                 });
-
-                alert('ส่งปิดยอดเรียบร้อยแล้ว!');
-                dailyHistory = [];
-                localStorage.setItem('na_coco_daily_log', '[]');
-                q = 1;
-                localStorage.setItem('na_coco_q', 1);
-                location.reload();
-
             } catch (e) {
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e);
+                console.error("Daily Close Error:", e);
             }
+
+            dailyHistory = [];
+            localStorage.removeItem('na_coco_daily_log');
+            q = 1;
+            localStorage.setItem('na_coco_q', q);
+            renderHistory();
+            renderApp();
+            closeHistory();
+            alert('ปิดยอดขายประจำวันและส่งข้อมูลเรียบร้อยแล้ว!');
         }
 
-        // --- Bluetooth Printer ---
+        // --- Bluetooth Printing Helpers ---
         async function connectBluetooth() {
             try {
                 const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
+                    filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
                     optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
                 });
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-                btCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                const characteristics = await service.getCharacteristics();
+                btCharacteristic = characteristics[0];
                 document.getElementById('bt-status').classList.replace('text-gray-400', 'text-blue-500');
-                alert('เชื่อมต่อเครื่องพิมพ์บลูทูธสำเร็จ!');
+                alert('เชื่อมต่อเครื่องพิมพ์ Bluetooth สำเร็จ');
             } catch (e) {
-                console.error(e);
-                alert('ไม่สามารถเชื่อมต่อบลูทูธได้');
+                console.error("Bluetooth Error:", e);
+                alert('ไม่สามารถเชื่อมต่อ Bluetooth ได้');
             }
         }
 
@@ -602,120 +766,24 @@
             await btCharacteristic.writeValue(data);
         }
 
-        // --- Helper Functions ---
-        function openModifier(idx) {
-            editingIndex = idx;
-            const item = cart[idx];
-            document.getElementById('mod-title').innerText = item.name;
-            document.getElementById('mod-note').value = item.note || '';
-            setSweet(item.sweet || '100%');
-            document.getElementById('modifier-modal').style.display = 'flex';
-        }
-
-        function setSweet(val) {
-            selectedSweet = val;
-            document.querySelectorAll('.sweet-btn').forEach(btn => {
-                if (btn.getAttribute('data-val') === val) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        function saveModifier() {
-            if (editingIndex !== null && cart[editingIndex]) {
-                cart[editingIndex].sweet = selectedSweet;
-                cart[editingIndex].note = document.getElementById('mod-note').value;
-                updateCart();
-            }
-            document.getElementById('modifier-modal').style.display = 'none';
-        }
-
-        function setUnit(unit) {
-            discountUnit = unit;
-            if (unit === '฿') {
-                document.getElementById('unit-baht').classList.add('active');
-                document.getElementById('unit-percent').classList.remove('active');
-            } else {
-                document.getElementById('unit-percent').classList.add('active');
-                document.getElementById('unit-baht').classList.remove('active');
-            }
-            updateCart();
-        }
-
-        function calculateChange() {
-            const total = parseFloat(document.getElementById('total-price').innerText.replace(/,/g, '')) || 0;
-            const cash = parseFloat(document.getElementById('cash-in').value) || 0;
-            const changeBox = document.getElementById('change-box');
-            
-            if (cash > 0 && cash >= total) {
-                document.getElementById('change-amount').innerText = (cash - total).toLocaleString();
-                changeBox.classList.remove('hidden');
-            } else {
-                changeBox.classList.add('hidden');
-            }
-        }
-
-        function updateQR(amount) {
-            const pp = localStorage.getItem('na_coco_pp');
-            const qrArea = document.getElementById('qr-area');
-            if (pp && amount > 0) {
-                document.getElementById('qr-img').src = `https://promptpay.io/${pp}/${amount}.png`;
-                qrArea.classList.remove('hidden');
-            } else {
-                qrArea.classList.add('hidden');
-            }
-        }
-
-        function clearCart() {
-            cart = [];
-            isOrderConfirmed = false;
-            document.getElementById('cash-in').value = '';
-            document.getElementById('discount-val').value = '';
-            document.getElementById('receipt-note').value = '';
-            updateCart();
-        }
-
-        function resetQueue() {
-            if (confirm('ต้องการรีเซ็ตคิวเป็น #01 หรือไม่?')) {
-                q = 1;
-                localStorage.setItem('na_coco_q', q);
-                renderApp();
-            }
-        }
-
-        // --- Admin Section ---
-        function openAdmin() {
-            renderAdminMenu();
-            document.getElementById('admin-modal').style.display = 'flex';
-        }
-
-        function closeAdmin() {
-            document.getElementById('admin-modal').style.display = 'none';
-        }
+        // --- Admin Functions ---
+        function openAdmin() { document.getElementById('admin-modal').style.display = 'flex'; renderAdminMenu(); }
+        function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
 
         function renderAdminMenu() {
-            const container = document.getElementById('admin-menu-list');
-            container.innerHTML = menuItems.map((item, idx) => `
-                <div class="p-3 bg-gray-50 rounded-xl border space-y-2">
-                    <div class="flex gap-2 items-center">
-                        <img src="${item.img || 'https://via.placeholder.com/50'}" class="w-10 h-10 object-cover rounded-lg">
-                        <input type="file" id="file-${idx}" accept="image/*" class="hidden" onchange="processImage(this, ${idx})">
-                        <button type="button" onclick="document.getElementById('file-${idx}').click()" class="text-[10px] bg-white border px-2 py-1 rounded">เปลี่ยนรูป</button>
-                        <button type="button" onclick="menuItems.splice(${idx},1); renderAdminMenu();" class="text-red-500 ml-auto text-xs"><i class="fas fa-trash"></i></button>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <input type="text" value="${item.category || ''}" placeholder="หมวดหมู่" onchange="menuItems[${idx}].category = this.value" class="p-2 border rounded text-xs">
-                        <input type="text" value="${item.name || ''}" placeholder="ชื่อเมนู" onchange="menuItems[${idx}].name = this.value" class="p-2 border rounded text-xs">
-                        <input type="number" value="${item.price || ''}" placeholder="ราคา" onchange="menuItems[${idx}].price = parseFloat(this.value)" class="p-2 border rounded text-xs">
-                    </div>
+            const list = document.getElementById('admin-menu-list');
+            list.innerHTML = menuItems.map((item, idx) => `
+                <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-xl border">
+                    <input type="text" value="${item.name}" onchange="menuItems[${idx}].name=this.value" class="flex-grow p-2 bg-white rounded-lg border text-xs">
+                    <input type="number" value="${item.price}" onchange="menuItems[${idx}].price=parseFloat(this.value)" class="w-16 p-2 bg-white rounded-lg border text-xs font-bold">
+                    <input type="text" value="${item.category || 'ทั่วไป'}" onchange="menuItems[${idx}].category=this.value" class="w-20 p-2 bg-white rounded-lg border text-xs">
+                    <button onclick="menuItems.splice(${idx},1); renderAdminMenu();" class="text-red-400 px-1"><i class="fas fa-trash"></i></button>
                 </div>
             `).join('');
         }
 
         function addNewMenuItem() {
-            menuItems.push({ name: 'เมนูใหม่', price: 0, category: 'ทั่วไป', img: '' });
+            menuItems.push({ name: "เมนูใหม่", price: 0, category: "ทั่วไป", img: "" });
             renderAdminMenu();
         }
 
@@ -723,13 +791,8 @@
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    if (target === 'logo') {
-                        tempLogoData = e.target.result;
-                        document.getElementById('admin-logo-preview').src = tempLogoData;
-                    } else {
-                        menuItems[target].img = e.target.result;
-                        renderAdminMenu();
-                    }
+                    tempLogoData = e.target.result;
+                    document.getElementById('admin-logo-preview').src = tempLogoData;
                 };
                 reader.readAsDataURL(input.files[0]);
             }
@@ -751,10 +814,9 @@
             localStorage.setItem('na_coco_menu', JSON.stringify(menuItems));
 
             document.getElementById('shop-address-display').innerText = addr;
-            closeAdmin();
             renderApp();
-            updateCart();
-            alert('บันทึกข้อมูลเรียบร้อยแล้ว');
+            closeAdmin();
+            alert('บันทึกการตั้งค่าเรียบร้อยแล้ว');
         }
     </script>
 </body>
