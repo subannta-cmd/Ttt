@@ -262,7 +262,9 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyx0_BRxbpfWvHV329LA4DdADtithM1BhI25rIgnuZvn981UCPcJ3qLBGUe3XqEvYk1/exec';
+        // ⚠️ วาง Web App URL ที่ได้จาก Google Apps Script ใหม่ตรงนี้ครับ
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxcNHDfPB_UB_RDww3Z4RMIsxRa0_TlS5yyZkmHig7wfXdv-MvTIqCKpTowBJS0EAx5/exec';
+        
         let menuItems = JSON.parse(localStorage.getItem('na_coco_menu')) || [];
         let cart = [];
         let dailyHistory = JSON.parse(localStorage.getItem('na_coco_daily_log')) || [];
@@ -560,7 +562,7 @@
             document.getElementById('hist-net').innerText = (sales - exps).toLocaleString();
         }
 
-        // --- ฟังก์ชันชำระเงิน ---
+        // --- ฟังก์ชันชำระเงิน (ส่งเข้า Sheet 'Sales') ---
         async function handleCheckout() {
             if (cart.length === 0 || !isOrderConfirmed) return;
 
@@ -610,6 +612,7 @@
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify({
+                        type: 'SALE_ORDER',
                         timestamp: timeStr,
                         items: itemsText,
                         amount: finalTotal,
@@ -618,7 +621,7 @@
                     })
                 });
             } catch (e) {
-                console.error("Sheet Error:", e);
+                console.error("Sheet Order Error:", e);
             }
 
             setTimeout(() => {
@@ -629,27 +632,49 @@
             }, 1000);
         }
 
-        // --- ฟังก์ชันปิดยอดรายวัน ---
+        // --- ฟังก์ชันปิดยอดรายวัน (ส่งเข้า Sheet 'DailyReports' ตรงช่อง A B C D E) ---
         async function sendDailyClose() {
-            if (!confirm('ยืนยันปิดยอดขายและสั่งพิมพ์สลิปสรุปรายวัน?')) return;
+            if (!confirm('ยืนยันปิดยอดขายและส่งข้อมูลเข้า Google Sheet?')) return;
 
             let sales = 0;
             let exps = 0;
             let expDetails = [];
             const timeStr = new Date().toLocaleString('th-TH');
+            
+            const today = new Date();
+            const dateStr = today.getDate() + "/" + (today.getMonth() + 1) + "/" + (today.getFullYear() + 543);
 
             dailyHistory.forEach(i => {
                 if (i.type === 'SALE') {
                     sales += i.amount;
                 } else if (i.type === 'EXPENSE') {
                     exps += i.amount;
-                    expDetails.push(`${i.note} (${i.amount.toLocaleString()}.-)`);
+                    expDetails.push(`${i.note}(${i.amount})`);
                 }
             });
 
             const net = sales - exps;
+            const expText = expDetails.length > 0 ? expDetails.join(', ') : '';
 
-            // ส่งข้อมูลออก Bluetooth (ถ้ามี)
+            // 1. ส่งข้อมูลเข้า Sheet 'DailyReports'
+            try {
+                fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        type: 'DAILY_CLOSE',
+                        date: dateStr,
+                        sales: sales,
+                        exps: exps,
+                        expDetails: expText,
+                        net: net
+                    })
+                });
+            } catch (e) {
+                console.error("Sheet Daily Close Error:", e);
+            }
+
+            // 2. พิมพ์ Bluetooth
             if (btCharacteristic) {
                 let txt = `==========================\n`;
                 txt += `    รายงานสรุปปิดยอดขาย\n`;
@@ -671,7 +696,7 @@
                 await printViaBluetooth(txt);
             }
 
-            // เตรียมข้อมูลใส่ใน DOM สำหรับพิมพ์ผ่าน Browser Print
+            // 3. พิมพ์ผ่าน Browser
             document.getElementById('daily-print-date').innerText = timeStr;
             document.getElementById('daily-print-sales').innerText = sales.toLocaleString() + ' .-';
             document.getElementById('daily-print-exps').innerText = exps.toLocaleString() + ' .-';
@@ -687,7 +712,7 @@
             document.body.className = "print-daily";
             window.print();
 
-            // ล้างข้อมูลรายวันและคิว
+            // 4. ล้างค่าสำหรับวันถัดไป
             setTimeout(() => {
                 dailyHistory = [];
                 localStorage.setItem('na_coco_daily_log', JSON.stringify([]));
@@ -695,7 +720,7 @@
                 localStorage.setItem('na_coco_q', q);
                 closeHistory();
                 renderApp();
-                alert('ส่งปิดยอดและรีเซ็ตระบบเรียบร้อยแล้ว!');
+                alert('ส่งปิดยอดเข้า Google Sheet และพิมพ์สลิปเรียบร้อยแล้ว!');
             }, 1000);
         }
 
